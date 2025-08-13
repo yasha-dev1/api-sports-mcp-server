@@ -1,0 +1,1 @@
+"""Tests for API-Sports MCP Server."""
