@@ -9,19 +9,30 @@ from .config import get_settings
 from .logger import get_logger, setup_logging
 from .services import ApiSportsService, CacheService
 
-# Setup logging
-setup_logging()
-logger = get_logger(__name__)
+# Lazy initialization - will be set up when the module is run
+logger = None
+settings = None
+cache_service = None
+api_service = None
+mcp = None
 
-# Initialize settings and services
-settings = get_settings()
-cache_service = CacheService()
-api_service = ApiSportsService(cache_service=cache_service)
-
-# Create FastMCP server instance
-mcp = FastMCP(
-    name=settings.mcp_server_name
-)
+def _initialize():
+    """Initialize the module-level variables."""
+    global logger, settings, cache_service, api_service, mcp
+    
+    # Setup logging first
+    setup_logging()
+    logger = get_logger(__name__)
+    
+    # Initialize settings and services
+    settings = get_settings()
+    cache_service = CacheService()
+    api_service = ApiSportsService(cache_service=cache_service)
+    
+    # Create FastMCP server instance
+    mcp = FastMCP(
+        name=settings.mcp_server_name
+    )
 
 # Tool: teams_search
 @mcp.tool()
@@ -236,6 +247,9 @@ def run_http(host: str = "0.0.0.0", port: int = 8080) -> None:
         host: Host to bind to (default: 0.0.0.0)
         port: Port to bind to (default: 8080)
     """
+    if not mcp:
+        _initialize()
+    
     logger.info(f"Starting FastMCP HTTP server on {host}:{port}")
     logger.info(f"Server: {settings.mcp_server_name} v{settings.mcp_server_version}")
     logger.info("Note: FastMCP currently runs on port 8000 internally")
@@ -247,6 +261,9 @@ def run_http(host: str = "0.0.0.0", port: int = 8080) -> None:
 
 def run_stdio() -> None:
     """Run the FastMCP server with stdio transport."""
+    if not mcp:
+        _initialize()
+    
     logger.info(f"Starting FastMCP stdio server")
     logger.info(f"Server: {settings.mcp_server_name} v{settings.mcp_server_version}")
     
@@ -256,6 +273,9 @@ def run_stdio() -> None:
 
 if __name__ == "__main__":
     import sys
+    
+    # Initialize the module
+    _initialize()
     
     # Check command line arguments
     if len(sys.argv) > 1 and sys.argv[1] == "--http":

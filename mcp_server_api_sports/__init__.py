@@ -3,6 +3,7 @@
 __version__ = "0.1.0"
 __author__ = "Betforward"
 
-from .server import ApiSportsMCPServer
+# Don't import server at module level to avoid initialization issues
+# from .server import ApiSportsMCPServer
 
-__all__ = ["ApiSportsMCPServer"]
+__all__ = ["__version__", "__author__"]

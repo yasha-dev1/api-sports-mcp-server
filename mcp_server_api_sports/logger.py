@@ -206,5 +206,5 @@ def log_performance(func: Any) -> Any:
     return sync_wrapper
 
 
-# Initialize logging on module import
-setup_logging()
+# Don't initialize logging on module import - let the main scripts do it
+# setup_logging() should be called explicitly by the entry points
