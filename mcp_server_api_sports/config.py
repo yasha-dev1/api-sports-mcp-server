@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     )
 
     # API-Sports Configuration
-    api_sports_api_key: str = Field(..., description="API-Sports API key")
+    api_sports_api_key: str = Field(default="", description="API-Sports API key")
     api_sports_base_url: str = Field(
         default="https://v3.football.api-sports.io",
         description="API-Sports base URL"

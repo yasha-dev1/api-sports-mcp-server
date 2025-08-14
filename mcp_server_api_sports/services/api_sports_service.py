@@ -1,10 +1,12 @@
 """API-Sports service for making API calls."""
 
+from __future__ import annotations
+
 import asyncio
 import time
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 from pydantic import ValidationError
@@ -12,6 +14,9 @@ from pydantic import ValidationError
 from ..config import get_settings
 from ..logger import get_logger, log_performance
 from ..models import ApiResponse
+
+if TYPE_CHECKING:
+    from .cache_service import CacheService
 
 logger = get_logger(__name__)
 
@@ -75,7 +80,7 @@ class RateLimiter:
 class ApiSportsService:
     """Service for interacting with API-Sports API."""
 
-    def __init__(self, cache_service=None):
+    def __init__(self, cache_service: CacheService | None = None) -> None:
         self.settings = get_settings()
         self.base_url = self.settings.api_sports_base_url
         self.api_key = self.settings.api_sports_api_key
@@ -259,25 +264,25 @@ class ApiSportsService:
         search: str | None = None,
     ) -> ApiResponse:
         """Get teams information."""
-        params = {}
+        params: dict[str, Any] = {}
         if id is not None:
-            params["id"] = id
+            params["id"] = str(id)
         if name:
             params["name"] = name
         if league is not None:
-            params["league"] = league
+            params["league"] = str(league)
         if season is not None:
-            params["season"] = season
+            params["season"] = str(season)
         if country:
             params["country"] = country
         if code:
             params["code"] = code
         if venue is not None:
-            params["venue"] = venue
+            params["venue"] = str(venue)
         if search:
             params["search"] = search
 
-        return await self.make_request("/teams", params)
+        return await self.make_request("/teams", params)  # type: ignore[no-any-return]
 
     async def get_fixtures(
         self,
@@ -298,9 +303,9 @@ class ApiSportsService:
         timezone: str | None = None,
     ) -> ApiResponse:
         """Get fixtures information."""
-        params = {}
+        params: dict[str, Any] = {}
         if id is not None:
-            params["id"] = id
+            params["id"] = str(id)
         if ids:
             params["ids"] = ids
         if live:
@@ -308,15 +313,15 @@ class ApiSportsService:
         if date:
             params["date"] = date
         if league is not None:
-            params["league"] = league
+            params["league"] = str(league)
         if season is not None:
-            params["season"] = season
+            params["season"] = str(season)
         if team is not None:
-            params["team"] = team
+            params["team"] = str(team)
         if last is not None:
-            params["last"] = last
+            params["last"] = str(last)
         if next is not None:
-            params["next"] = next
+            params["next"] = str(next)
         if from_date:
             params["from"] = from_date
         if to_date:
@@ -326,11 +331,11 @@ class ApiSportsService:
         if status:
             params["status"] = status
         if venue is not None:
-            params["venue"] = venue
+            params["venue"] = str(venue)
         if timezone:
             params["timezone"] = timezone
 
-        return await self.make_request("/fixtures", params)
+        return await self.make_request("/fixtures", params)  # type: ignore[no-any-return]
 
     async def get_team_statistics(
         self,
@@ -340,15 +345,15 @@ class ApiSportsService:
         date: str | None = None,
     ) -> ApiResponse:
         """Get team statistics."""
-        params = {
-            "league": league,
-            "season": season,
-            "team": team,
+        params: dict[str, Any] = {
+            "league": str(league),
+            "season": str(season),
+            "team": str(team),
         }
         if date:
             params["date"] = date
 
-        return await self.make_request("/teams/statistics", params)
+        return await self.make_request("/teams/statistics", params)  # type: ignore[no-any-return]
 
     async def get_standings(
         self,
@@ -357,14 +362,14 @@ class ApiSportsService:
         team: int | None = None,
     ) -> ApiResponse:
         """Get league standings."""
-        params = {
-            "league": league,
-            "season": season,
+        params: dict[str, Any] = {
+            "league": str(league),
+            "season": str(season),
         }
         if team is not None:
-            params["team"] = team
+            params["team"] = str(team)
 
-        return await self.make_request("/standings", params)
+        return await self.make_request("/standings", params)  # type: ignore[no-any-return]
 
     async def get_fixtures_head2head(
         self,
@@ -381,18 +386,18 @@ class ApiSportsService:
         timezone: str | None = None,
     ) -> ApiResponse:
         """Get head to head fixtures."""
-        params = {"h2h": h2h}
+        params: dict[str, Any] = {"h2h": h2h}
 
         if date:
             params["date"] = date
         if league is not None:
-            params["league"] = league
+            params["league"] = str(league)
         if season is not None:
-            params["season"] = season
+            params["season"] = str(season)
         if last is not None:
-            params["last"] = last
+            params["last"] = str(last)
         if next is not None:
-            params["next"] = next
+            params["next"] = str(next)
         if from_date:
             params["from"] = from_date
         if to_date:
@@ -400,27 +405,27 @@ class ApiSportsService:
         if status:
             params["status"] = status
         if venue is not None:
-            params["venue"] = venue
+            params["venue"] = str(venue)
         if timezone:
             params["timezone"] = timezone
 
-        return await self.make_request("/fixtures/headtohead", params)
+        return await self.make_request("/fixtures/headtohead", params)  # type: ignore[no-any-return]
 
     async def get_fixture_statistics(self, fixture: int) -> ApiResponse:
         """Get fixture statistics."""
-        return await self.make_request("/fixtures/statistics", {"fixture": fixture})
+        return await self.make_request("/fixtures/statistics", {"fixture": str(fixture)})  # type: ignore[no-any-return]
 
     async def get_fixture_events(self, fixture: int) -> ApiResponse:
         """Get fixture events."""
-        return await self.make_request("/fixtures/events", {"fixture": fixture})
+        return await self.make_request("/fixtures/events", {"fixture": str(fixture)})  # type: ignore[no-any-return]
 
     async def get_fixture_lineups(self, fixture: int) -> ApiResponse:
         """Get fixture lineups."""
-        return await self.make_request("/fixtures/lineups", {"fixture": fixture})
+        return await self.make_request("/fixtures/lineups", {"fixture": str(fixture)})  # type: ignore[no-any-return]
 
     async def get_predictions(self, fixture: int) -> ApiResponse:
         """Get fixture predictions."""
-        return await self.make_request("/predictions", {"fixture": fixture})
+        return await self.make_request("/predictions", {"fixture": str(fixture)})  # type: ignore[no-any-return]
 
     # Business logic methods with validation and formatting
 
@@ -461,21 +466,21 @@ class ApiSportsService:
             }
 
         # Build parameters for cache key
-        params = {}
+        params: dict[str, Any] = {}
         if id is not None:
-            params["id"] = id
+            params["id"] = str(id)
         if name:
             params["name"] = name
         if league is not None:
-            params["league"] = league
+            params["league"] = str(league)
         if season is not None:
-            params["season"] = season
+            params["season"] = str(season)
         if country:
             params["country"] = country
         if code:
             params["code"] = code
         if venue is not None:
-            params["venue"] = venue
+            params["venue"] = str(venue)
         if search:
             params["search"] = search
 
@@ -493,7 +498,7 @@ class ApiSportsService:
                         "Returning cached teams result",
                         extra={"request_id": request_id}
                     )
-                    return cached_result
+                    return cached_result  # type: ignore[no-any-return]
 
             # Make API request
             response = await self.get_teams(
@@ -627,9 +632,9 @@ class ApiSportsService:
                 }
 
         # Build parameters
-        params = {}
+        params: dict[str, Any] = {}
         if id is not None:
-            params["id"] = id
+            params["id"] = str(id)
         if ids:
             params["ids"] = ids
         if live:
@@ -637,15 +642,15 @@ class ApiSportsService:
         if date:
             params["date"] = date
         if league is not None:
-            params["league"] = league
+            params["league"] = str(league)
         if season is not None:
-            params["season"] = season
+            params["season"] = str(season)
         if team is not None:
-            params["team"] = team
+            params["team"] = str(team)
         if last is not None:
-            params["last"] = last
+            params["last"] = str(last)
         if next is not None:
-            params["next"] = next
+            params["next"] = str(next)
         if from_date:
             params["from"] = from_date
         if to_date:
@@ -655,7 +660,7 @@ class ApiSportsService:
         if status:
             params["status"] = status
         if venue is not None:
-            params["venue"] = venue
+            params["venue"] = str(venue)
         if timezone:
             params["timezone"] = timezone
 
@@ -673,7 +678,7 @@ class ApiSportsService:
                         "Returning cached fixtures result",
                         extra={"request_id": request_id}
                     )
-                    return cached_result
+                    return cached_result  # type: ignore[no-any-return]
 
             # Make API request
             response = await self.get_fixtures(
@@ -826,10 +831,10 @@ class ApiSportsService:
                 }
 
         # Build parameters
-        params = {
-            "league": league,
-            "season": season,
-            "team": team,
+        params: dict[str, Any] = {
+            "league": str(league),
+            "season": str(season),
+            "team": str(team),
         }
         if date:
             params["date"] = date
@@ -848,7 +853,7 @@ class ApiSportsService:
                         "Returning cached statistics result",
                         extra={"request_id": request_id}
                     )
-                    return cached_result
+                    return cached_result  # type: ignore[no-any-return]
 
             # Make API request
             response = await self.get_team_statistics(
@@ -937,7 +942,7 @@ class ApiSportsService:
                         "Returning cached standings result",
                         extra={"request_id": request_id}
                     )
-                    return cached_result
+                    return cached_result  # type: ignore[no-any-return]
 
             # Make API request
             response = await self.get_standings(
@@ -1182,7 +1187,7 @@ class ApiSportsService:
                         "Returning cached fixture statistics",
                         extra={"request_id": request_id}
                     )
-                    return cached_result
+                    return cached_result  # type: ignore[no-any-return]
 
             # Make API request
             response = await self.get_fixture_statistics(fixture)
@@ -1262,7 +1267,7 @@ class ApiSportsService:
                         "Returning cached fixture events",
                         extra={"request_id": request_id}
                     )
-                    return cached_result
+                    return cached_result  # type: ignore[no-any-return]
 
             # Make API request
             response = await self.get_fixture_events(fixture)
@@ -1336,7 +1341,7 @@ class ApiSportsService:
                         "Returning cached fixture lineups",
                         extra={"request_id": request_id}
                     )
-                    return cached_result
+                    return cached_result  # type: ignore[no-any-return]
 
             # Make API request
             response = await self.get_fixture_lineups(fixture)
@@ -1426,7 +1431,7 @@ class ApiSportsService:
                         "Returning cached predictions",
                         extra={"request_id": request_id}
                     )
-                    return cached_result
+                    return cached_result  # type: ignore[no-any-return]
 
             # Make API request
             response = await self.get_predictions(fixture)

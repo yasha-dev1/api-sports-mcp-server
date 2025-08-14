@@ -28,7 +28,7 @@ class CacheEntry:
 class CacheService:
     """In-memory cache service with TTL and LRU eviction."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.settings = get_settings()
         self.enabled = self.settings.cache_enabled
         self.max_size = self.settings.cache_max_size

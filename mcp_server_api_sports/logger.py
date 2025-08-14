@@ -3,11 +3,14 @@
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
 from .config import get_settings
+
+if TYPE_CHECKING:
+    from loguru import Logger
 
 
 def serialize_record(record: dict[str, Any]) -> str:
@@ -109,7 +112,7 @@ def setup_logging() -> None:
     )
 
 
-def get_logger(name: str = None) -> "logger":
+def get_logger(name: str | None = None) -> "Logger":
     """Get a contextualized logger instance."""
     if name:
         return logger.bind(module=name)
@@ -117,13 +120,13 @@ def get_logger(name: str = None) -> "logger":
 
 
 # Performance logging decorator
-def log_performance(func):
+def log_performance(func: Any) -> Any:
     """Decorator to log function performance."""
     import functools
     import time
 
     @functools.wraps(func)
-    async def async_wrapper(*args, **kwargs):
+    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
         start_time = time.perf_counter()
         request_id = kwargs.get("request_id", "unknown")
 
@@ -160,7 +163,7 @@ def log_performance(func):
             raise
 
     @functools.wraps(func)
-    def sync_wrapper(*args, **kwargs):
+    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
         start_time = time.perf_counter()
         request_id = kwargs.get("request_id", "unknown")
 

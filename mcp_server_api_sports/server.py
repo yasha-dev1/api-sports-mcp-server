@@ -18,9 +18,9 @@ logger = get_logger(__name__)
 class ApiSportsMCPServer:
     """MCP Server for API-Sports integration."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.settings = get_settings()
-        self.server = Server(self.settings.mcp_server_name)
+        self.server: Server = Server(self.settings.mcp_server_name)
 
         # Initialize services
         self.cache_service = CacheService()
@@ -33,7 +33,7 @@ class ApiSportsMCPServer:
             f"Initialized {self.settings.mcp_server_name} v{self.settings.mcp_server_version}"
         )
 
-    def _register_handlers(self):
+    def _register_handlers(self) -> None:
         """Register MCP server handlers."""
 
         @self.server.list_tools()
@@ -384,19 +384,19 @@ class ApiSportsMCPServer:
                     text=json.dumps({"error": error_msg})
                 )]
 
-    async def cleanup(self):
+    async def cleanup(self) -> None:
         """Cleanup resources."""
         logger.info("Cleaning up resources...")
         await self.api_service.close()
         logger.info("Cleanup complete")
 
-    async def run(self):
+    async def run(self) -> None:
         """Run the MCP server."""
         logger.info(f"Starting {self.settings.mcp_server_name}...")
 
         try:
             # Start periodic cache cleanup task
-            async def cache_cleanup_task():
+            async def cache_cleanup_task() -> None:
                 while True:
                     await asyncio.sleep(300)  # Every 5 minutes
                     cleaned = await self.cache_service.cleanup_expired()
@@ -409,7 +409,7 @@ class ApiSportsMCPServer:
             # Run the server
             async with stdio_server() as (read_stream, write_stream):
                 logger.info("MCP server started successfully")
-                await self.server.run(read_stream, write_stream)
+                await self.server.run(read_stream, write_stream, None)  # type: ignore[arg-type]
 
         except KeyboardInterrupt:
             logger.info("Server interrupted by user")
@@ -421,7 +421,7 @@ class ApiSportsMCPServer:
             await self.cleanup()
 
 
-async def main():
+async def main() -> None:
     """Main entry point."""
     # Setup logging first
     setup_logging()
@@ -431,7 +431,7 @@ async def main():
     await server.run()
 
 
-def run():
+def run() -> None:
     """Synchronous entry point for the script."""
     asyncio.run(main())
 
