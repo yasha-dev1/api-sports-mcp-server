@@ -161,20 +161,19 @@ class ApiSportsService:
                     await asyncio.sleep(retry_after)
                     continue
 
-                if response.status_code >= 500:
+                if response.status_code >= 500 and attempt < max_retries - 1:
                     # Server error, retry with backoff
-                    if attempt < max_retries - 1:
-                        sleep_time = backoff_factor ** attempt
-                        logger.warning(
-                            f"Server error {response.status_code}, retrying in {sleep_time}s",
-                            extra={
-                                "status_code": response.status_code,
-                                "sleep_time": sleep_time,
-                                "request_id": request_id,
-                            }
-                        )
-                        await asyncio.sleep(sleep_time)
-                        continue
+                    sleep_time = backoff_factor ** attempt
+                    logger.warning(
+                        f"Server error {response.status_code}, retrying in {sleep_time}s",
+                        extra={
+                            "status_code": response.status_code,
+                            "sleep_time": sleep_time,
+                            "request_id": request_id,
+                        }
+                    )
+                    await asyncio.sleep(sleep_time)
+                    continue
 
                 response.raise_for_status()
 
@@ -956,13 +955,13 @@ class ApiSportsService:
 
             standings_data = []
             league_info = response.response[0].get("league", {})
-            
+
             # Extract standings from the response
             standings_list = league_info.get("standings", [])
             if standings_list and isinstance(standings_list[0], list):
                 # API returns nested array for standings
                 standings_list = standings_list[0]
-            
+
             for standing in standings_list:
                 formatted_standing = {
                     "rank": standing.get("rank"),
@@ -1108,14 +1107,14 @@ class ApiSportsService:
             team1_wins = 0
             team2_wins = 0
             draws = 0
-            
+
             for fixture in fixtures_data:
                 if fixture.get("status", {}).get("short") in ["FT", "AET", "PEN"]:
                     home_id = str(fixture.get("teams", {}).get("home", {}).get("id"))
                     away_id = str(fixture.get("teams", {}).get("away", {}).get("id"))
                     home_goals = fixture.get("goals", {}).get("home")
                     away_goals = fixture.get("goals", {}).get("away")
-                    
+
                     if home_goals is not None and away_goals is not None:
                         if home_goals > away_goals:
                             if home_id == team_ids[0]:
@@ -1199,14 +1198,14 @@ class ApiSportsService:
             for team_stats in response.response:
                 team_info = team_stats.get("team", {})
                 statistics = team_stats.get("statistics", [])
-                
+
                 # Convert statistics array to dictionary for easier access
                 stats_dict = {}
                 for stat in statistics:
                     stat_type = stat.get("type")
                     stat_value = stat.get("value")
                     stats_dict[stat_type] = stat_value
-                
+
                 stats_data.append({
                     "team": team_info,
                     "statistics": stats_dict,
@@ -1356,7 +1355,7 @@ class ApiSportsService:
                 starting_xi = team_lineup.get("startXI", [])
                 substitutes = team_lineup.get("substitutes", [])
                 coach = team_lineup.get("coach", {})
-                
+
                 lineup_data = {
                     "team": team_info,
                     "formation": formation,
@@ -1440,7 +1439,7 @@ class ApiSportsService:
                 }
 
             prediction_data = response.response[0]
-            
+
             # Extract and format prediction data
             formatted_prediction = {
                 "winner": prediction_data.get("winner", {}),

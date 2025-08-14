@@ -184,7 +184,7 @@ async def test_rate_limiter_acquire(api_service):
 async def test_search_teams_by_id(api_service, cache_service, mock_team_response):
     """Test searching teams by ID."""
     api_service.cache_service = cache_service
-    
+
     # Mock API response
     from mcp_server_api_sports.models import ApiResponse
     api_response = ApiResponse(**mock_team_response)
@@ -228,7 +228,7 @@ async def test_search_teams_validation(api_service, cache_service):
 async def test_search_teams_with_cache(api_service, cache_service, mock_team_response):
     """Test teams search with caching."""
     api_service.cache_service = cache_service
-    
+
     from mcp_server_api_sports.models import ApiResponse
     api_response = ApiResponse(**mock_team_response)
 
@@ -251,7 +251,7 @@ async def test_search_teams_with_cache(api_service, cache_service, mock_team_res
 async def test_search_teams_multiple_params(api_service, cache_service, mock_team_response):
     """Test searching teams with multiple parameters."""
     api_service.cache_service = cache_service
-    
+
     from mcp_server_api_sports.models import ApiResponse
     api_response = ApiResponse(**mock_team_response)
 
@@ -299,7 +299,7 @@ async def test_search_teams_error_handling(api_service, cache_service):
 async def test_search_fixtures_by_id(api_service, cache_service, mock_fixture_response):
     """Test searching fixtures by ID."""
     api_service.cache_service = cache_service
-    
+
     from mcp_server_api_sports.models import ApiResponse
     api_response = ApiResponse(**mock_fixture_response)
 
@@ -360,7 +360,7 @@ async def test_search_fixtures_last_next_validation(api_service, cache_service):
 async def test_get_team_statistics_formatted(api_service, cache_service, mock_statistics_response):
     """Test getting formatted team statistics."""
     api_service.cache_service = cache_service
-    
+
     from mcp_server_api_sports.models import ApiResponse
     api_response = ApiResponse(**mock_statistics_response)
 
@@ -395,7 +395,7 @@ async def test_get_team_statistics_formatted(api_service, cache_service, mock_st
 async def test_get_team_statistics_formatted_with_date(api_service, cache_service, mock_statistics_response):
     """Test getting formatted team statistics with date snapshot."""
     api_service.cache_service = cache_service
-    
+
     from mcp_server_api_sports.models import ApiResponse
     api_response = ApiResponse(**mock_statistics_response)
 
@@ -430,7 +430,7 @@ async def test_get_team_statistics_formatted_date_validation(api_service, cache_
         team=33,
         date="15/01/2024"
     )
-    
+
     assert "error" in result
     assert "YYYY-MM-DD format" in result["error"]
 
@@ -441,7 +441,7 @@ async def test_get_team_statistics_formatted_date_validation(api_service, cache_
 async def test_get_standings_formatted(api_service, cache_service):
     """Test getting formatted standings."""
     api_service.cache_service = cache_service
-    
+
     mock_standings_response = {
         "response": [{
             "league": {
@@ -470,7 +470,7 @@ async def test_get_standings_formatted(api_service, cache_service):
             }
         }]
     }
-    
+
     from mcp_server_api_sports.models import ApiResponse
     api_response = ApiResponse(**{"get": "/standings", "parameters": {}, "errors": [], "results": 1, "response": mock_standings_response["response"]})
 
@@ -490,7 +490,7 @@ async def test_get_standings_formatted(api_service, cache_service):
 async def test_get_head2head_formatted(api_service, cache_service, mock_fixture_response):
     """Test getting formatted head-to-head fixtures."""
     api_service.cache_service = cache_service
-    
+
     from mcp_server_api_sports.models import ApiResponse
     api_response = ApiResponse(**mock_fixture_response)
 
@@ -522,7 +522,7 @@ async def test_get_head2head_formatted_validation(api_service, cache_service):
 async def test_get_fixture_statistics_formatted(api_service, cache_service):
     """Test getting formatted fixture statistics."""
     api_service.cache_service = cache_service
-    
+
     mock_stats_response = {
         "response": [
             {
@@ -545,7 +545,7 @@ async def test_get_fixture_statistics_formatted(api_service, cache_service):
             }
         ]
     }
-    
+
     from mcp_server_api_sports.models import ApiResponse
     api_response = ApiResponse(**{"get": "/fixtures/statistics", "parameters": {}, "errors": [], "results": 2, "response": mock_stats_response["response"]})
 
@@ -564,7 +564,7 @@ async def test_get_fixture_statistics_formatted(api_service, cache_service):
 async def test_get_fixture_events_formatted(api_service, cache_service):
     """Test getting formatted fixture events."""
     api_service.cache_service = cache_service
-    
+
     mock_events_response = {
         "response": [
             {
@@ -587,7 +587,7 @@ async def test_get_fixture_events_formatted(api_service, cache_service):
             }
         ]
     }
-    
+
     from mcp_server_api_sports.models import ApiResponse
     api_response = ApiResponse(**{"get": "/fixtures/events", "parameters": {}, "errors": [], "results": 2, "response": mock_events_response["response"]})
 
@@ -606,7 +606,7 @@ async def test_get_fixture_events_formatted(api_service, cache_service):
 async def test_get_fixture_lineups_formatted(api_service, cache_service):
     """Test getting formatted fixture lineups."""
     api_service.cache_service = cache_service
-    
+
     mock_lineups_response = {
         "response": [
             {
@@ -622,7 +622,7 @@ async def test_get_fixture_lineups_formatted(api_service, cache_service):
             }
         ]
     }
-    
+
     from mcp_server_api_sports.models import ApiResponse
     api_response = ApiResponse(**{"get": "/fixtures/lineups", "parameters": {}, "errors": [], "results": 1, "response": mock_lineups_response["response"]})
 
@@ -641,7 +641,7 @@ async def test_get_fixture_lineups_formatted(api_service, cache_service):
 async def test_get_predictions_formatted(api_service, cache_service):
     """Test getting formatted predictions."""
     api_service.cache_service = cache_service
-    
+
     mock_predictions_response = {
         "response": [{
             "winner": {"id": 33, "name": "Manchester United", "comment": "Win or draw"},
@@ -663,7 +663,7 @@ async def test_get_predictions_formatted(api_service, cache_service):
             "h2h": []
         }]
     }
-    
+
     from mcp_server_api_sports.models import ApiResponse
     api_response = ApiResponse(**{"get": "/predictions", "parameters": {}, "errors": [], "results": 1, "response": mock_predictions_response["response"]})
 

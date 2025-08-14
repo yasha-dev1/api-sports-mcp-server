@@ -136,7 +136,7 @@ class CacheService:
 
             # Remove entries matching pattern
             keys_to_remove = [
-                key for key in self.cache.keys()
+                key for key in self.cache
                 if pattern in key
             ]
 
@@ -152,7 +152,6 @@ class CacheService:
             return 0
 
         async with self.lock:
-            current_time = time.time()
             keys_to_remove = [
                 key for key, entry in self.cache.items()
                 if entry.is_expired()
