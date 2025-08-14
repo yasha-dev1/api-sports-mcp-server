@@ -316,7 +316,7 @@ class ApiSportsMCPServer:
             logger.debug(f"Listed {len(tools)} tools")
             return tools
 
-        @self.server.call_tool()
+        @self.server.call_tool(validate_input=False)
         async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             """Execute a tool with given arguments."""
             logger.info(
@@ -343,6 +343,35 @@ class ApiSportsMCPServer:
                 )
                 
                 result = None
+                
+                # Validate required parameters for specific tools
+                if name == "team_statistics":
+                    required = ["league", "season", "team"]
+                    missing = [p for p in required if p not in cleaned_args]
+                    if missing:
+                        error_msg = f"Missing required parameters: {', '.join(missing)}"
+                        logger.error(error_msg)
+                        return [TextContent(type="text", text=json.dumps({"error": error_msg}))]
+                
+                elif name == "standings":
+                    required = ["league", "season"]
+                    missing = [p for p in required if p not in cleaned_args]
+                    if missing:
+                        error_msg = f"Missing required parameters: {', '.join(missing)}"
+                        logger.error(error_msg)
+                        return [TextContent(type="text", text=json.dumps({"error": error_msg}))]
+                
+                elif name == "head2head":
+                    if "h2h" not in cleaned_args:
+                        error_msg = "Missing required parameter: h2h"
+                        logger.error(error_msg)
+                        return [TextContent(type="text", text=json.dumps({"error": error_msg}))]
+                
+                elif name in ["fixture_statistics", "fixture_events", "fixture_lineups", "predictions"]:
+                    if "fixture" not in cleaned_args:
+                        error_msg = "Missing required parameter: fixture"
+                        logger.error(error_msg)
+                        return [TextContent(type="text", text=json.dumps({"error": error_msg}))]
 
                 if name == "teams_search":
                     result = await self.api_service.search_teams(**cleaned_args)
