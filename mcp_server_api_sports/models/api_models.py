@@ -212,7 +212,7 @@ class ApiResponse(BaseModel):
     """Standard API response wrapper."""
 
     get: str
-    parameters: dict[str, Any]
+    parameters: dict[str, Any] | list[Any]  # Can be dict or empty list
     errors: list[str] | dict[str, Any]
     results: int
     paging: Paging | None = None
