@@ -59,9 +59,9 @@ USER mcp
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+# Health check disabled - FastMCP streamable-http doesn't easily support custom health endpoints
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+#     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 # Default command - run HTTP server with FastMCP
 CMD ["python", "-m", "mcp_server_api_sports.server_fastmcp", "--http"]
