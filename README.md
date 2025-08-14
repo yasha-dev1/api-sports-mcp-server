@@ -39,6 +39,44 @@ pip install -e .
 pip install -e ".[dev]"
 ```
 
+## Running the Server
+
+### Command Line
+
+```bash
+# Run as a module
+python -m mcp_server_api_sports
+
+# Or use the installed script (after pip install -e .)
+mcp-server-api-sports
+
+# Or use the standalone script for development
+python run_server.py
+```
+
+### IntelliJ IDEA / PyCharm
+
+For IntelliJ IDEA or PyCharm, you have several options:
+
+1. **Run Configuration using run_server.py** (Recommended for debugging):
+   - Right-click on `run_server.py` in the project explorer
+   - Select "Run 'run_server'"
+   - This script handles imports correctly for IDE debugging
+
+2. **Module Run Configuration**:
+   - Go to Run → Edit Configurations
+   - Add a new Python configuration
+   - Set "Module name" to: `mcp_server_api_sports`
+   - Set working directory to project root
+   - Add environment variable: `API_SPORTS_API_KEY=your_key`
+
+3. **Script Path Configuration**:
+   - Go to Run → Edit Configurations
+   - Add a new Python configuration
+   - Set "Script path" to: `run_server.py`
+   - Set working directory to project root
+   - Add environment variable: `API_SPORTS_API_KEY=your_key`
+
 ## Configuration
 
 ### Environment Variables

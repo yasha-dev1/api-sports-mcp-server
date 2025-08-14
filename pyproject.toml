@@ -33,7 +33,7 @@ dev = [
 ]
 
 [project.scripts]
-mcp-server-api-sports = "mcp_server_api_sports.server:main"
+mcp-server-api-sports = "mcp_server_api_sports.server:run"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
