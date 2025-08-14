@@ -433,3 +433,246 @@ async def test_get_team_statistics_formatted_date_validation(api_service, cache_
     
     assert "error" in result
     assert "YYYY-MM-DD format" in result["error"]
+
+
+# Tests for new tool methods
+
+@pytest.mark.asyncio
+async def test_get_standings_formatted(api_service, cache_service):
+    """Test getting formatted standings."""
+    api_service.cache_service = cache_service
+    
+    mock_standings_response = {
+        "response": [{
+            "league": {
+                "id": 39,
+                "name": "Premier League",
+                "country": "England",
+                "logo": "logo.png",
+                "flag": "flag.png",
+                "season": 2023,
+                "standings": [[
+                    {
+                        "rank": 1,
+                        "team": {"id": 33, "name": "Manchester United", "logo": "team.png"},
+                        "points": 75,
+                        "goalsDiff": 35,
+                        "group": "Premier League",
+                        "form": "WDWWW",
+                        "status": "same",
+                        "description": "Champions League",
+                        "all": {"played": 30, "win": 23, "draw": 6, "lose": 1, "goals": {"for": 70, "against": 35}},
+                        "home": {"played": 15, "win": 12, "draw": 3, "lose": 0, "goals": {"for": 40, "against": 15}},
+                        "away": {"played": 15, "win": 11, "draw": 3, "lose": 1, "goals": {"for": 30, "against": 20}},
+                        "update": "2024-01-15"
+                    }
+                ]]
+            }
+        }]
+    }
+    
+    from mcp_server_api_sports.models import ApiResponse
+    api_response = ApiResponse(**{"get": "/standings", "parameters": {}, "errors": [], "results": 1, "response": mock_standings_response["response"]})
+
+    with patch.object(api_service, "get_standings", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = api_response
+
+        result = await api_service.get_standings_formatted(league=39, season=2023)
+
+        assert "standings" in result
+        assert result["count"] == 1
+        assert result["standings"][0]["rank"] == 1
+        assert result["standings"][0]["team"]["name"] == "Manchester United"
+        assert result["standings"][0]["points"] == 75
+
+
+@pytest.mark.asyncio
+async def test_get_head2head_formatted(api_service, cache_service, mock_fixture_response):
+    """Test getting formatted head-to-head fixtures."""
+    api_service.cache_service = cache_service
+    
+    from mcp_server_api_sports.models import ApiResponse
+    api_response = ApiResponse(**mock_fixture_response)
+
+    with patch.object(api_service, "get_fixtures_head2head", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = api_response
+
+        result = await api_service.get_head2head_formatted(h2h="33-40")
+
+        assert "fixtures" in result
+        assert "statistics" in result
+        assert result["count"] == 1
+        assert "team1_wins" in result["statistics"]
+        assert "team2_wins" in result["statistics"]
+        assert "draws" in result["statistics"]
+
+
+@pytest.mark.asyncio
+async def test_get_head2head_formatted_validation(api_service, cache_service):
+    """Test h2h parameter validation."""
+    api_service.cache_service = cache_service
+
+    # Invalid h2h format
+    result = await api_service.get_head2head_formatted(h2h="33")
+    assert "error" in result
+    assert "team1-team2" in result["error"]
+
+
+@pytest.mark.asyncio
+async def test_get_fixture_statistics_formatted(api_service, cache_service):
+    """Test getting formatted fixture statistics."""
+    api_service.cache_service = cache_service
+    
+    mock_stats_response = {
+        "response": [
+            {
+                "team": {"id": 33, "name": "Manchester United", "logo": "team.png"},
+                "statistics": [
+                    {"type": "Shots on Goal", "value": 6},
+                    {"type": "Total Shots", "value": 15},
+                    {"type": "Possession", "value": "58%"},
+                    {"type": "Passes", "value": 456}
+                ]
+            },
+            {
+                "team": {"id": 40, "name": "Liverpool", "logo": "team2.png"},
+                "statistics": [
+                    {"type": "Shots on Goal", "value": 4},
+                    {"type": "Total Shots", "value": 12},
+                    {"type": "Possession", "value": "42%"},
+                    {"type": "Passes", "value": 367}
+                ]
+            }
+        ]
+    }
+    
+    from mcp_server_api_sports.models import ApiResponse
+    api_response = ApiResponse(**{"get": "/fixtures/statistics", "parameters": {}, "errors": [], "results": 2, "response": mock_stats_response["response"]})
+
+    with patch.object(api_service, "get_fixture_statistics", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = api_response
+
+        result = await api_service.get_fixture_statistics_formatted(fixture=1035000)
+
+        assert "teams" in result
+        assert len(result["teams"]) == 2
+        assert result["teams"][0]["statistics"]["Shots on Goal"] == 6
+        assert result["teams"][0]["statistics"]["Possession"] == "58%"
+
+
+@pytest.mark.asyncio
+async def test_get_fixture_events_formatted(api_service, cache_service):
+    """Test getting formatted fixture events."""
+    api_service.cache_service = cache_service
+    
+    mock_events_response = {
+        "response": [
+            {
+                "time": {"elapsed": 15, "extra": None},
+                "team": {"id": 33, "name": "Manchester United", "logo": "team.png"},
+                "player": {"id": 1, "name": "Rashford"},
+                "assist": {"id": 2, "name": "Bruno"},
+                "type": "Goal",
+                "detail": "Normal Goal",
+                "comments": None
+            },
+            {
+                "time": {"elapsed": 45, "extra": 2},
+                "team": {"id": 40, "name": "Liverpool", "logo": "team2.png"},
+                "player": {"id": 3, "name": "Salah"},
+                "assist": {},
+                "type": "Card",
+                "detail": "Yellow Card",
+                "comments": "Foul"
+            }
+        ]
+    }
+    
+    from mcp_server_api_sports.models import ApiResponse
+    api_response = ApiResponse(**{"get": "/fixtures/events", "parameters": {}, "errors": [], "results": 2, "response": mock_events_response["response"]})
+
+    with patch.object(api_service, "get_fixture_events", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = api_response
+
+        result = await api_service.get_fixture_events_formatted(fixture=1035000)
+
+        assert "events" in result
+        assert result["count"] == 2
+        assert result["events"][0]["type"] == "Goal"
+        assert result["events"][0]["player"]["name"] == "Rashford"
+
+
+@pytest.mark.asyncio
+async def test_get_fixture_lineups_formatted(api_service, cache_service):
+    """Test getting formatted fixture lineups."""
+    api_service.cache_service = cache_service
+    
+    mock_lineups_response = {
+        "response": [
+            {
+                "team": {"id": 33, "name": "Manchester United", "logo": "team.png"},
+                "formation": "4-2-3-1",
+                "startXI": [
+                    {"player": {"id": 1, "name": "De Gea", "number": 1, "pos": "G"}}
+                ],
+                "substitutes": [
+                    {"player": {"id": 2, "name": "Heaton", "number": 22, "pos": "G"}}
+                ],
+                "coach": {"id": 100, "name": "Ten Hag", "photo": "coach.png"}
+            }
+        ]
+    }
+    
+    from mcp_server_api_sports.models import ApiResponse
+    api_response = ApiResponse(**{"get": "/fixtures/lineups", "parameters": {}, "errors": [], "results": 1, "response": mock_lineups_response["response"]})
+
+    with patch.object(api_service, "get_fixture_lineups", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = api_response
+
+        result = await api_service.get_fixture_lineups_formatted(fixture=1035000)
+
+        assert "lineups" in result
+        assert len(result["lineups"]) == 1
+        assert result["lineups"][0]["formation"] == "4-2-3-1"
+        assert result["lineups"][0]["coach"]["name"] == "Ten Hag"
+
+
+@pytest.mark.asyncio
+async def test_get_predictions_formatted(api_service, cache_service):
+    """Test getting formatted predictions."""
+    api_service.cache_service = cache_service
+    
+    mock_predictions_response = {
+        "response": [{
+            "winner": {"id": 33, "name": "Manchester United", "comment": "Win or draw"},
+            "win_or_draw": True,
+            "under_over": "Over 2.5",
+            "goals": {"home": "1.5-2.5", "away": "0.5-1.5"},
+            "advice": "Manchester United or draw",
+            "percent": {"home": "45%", "draw": "30%", "away": "25%"},
+            "league": {"id": 39, "name": "Premier League"},
+            "teams": {
+                "home": {"id": 33, "name": "Manchester United"},
+                "away": {"id": 40, "name": "Liverpool"}
+            },
+            "comparison": {
+                "form": {"home": "60%", "away": "40%"},
+                "att": {"home": "55%", "away": "45%"},
+                "def": {"home": "52%", "away": "48%"}
+            },
+            "h2h": []
+        }]
+    }
+    
+    from mcp_server_api_sports.models import ApiResponse
+    api_response = ApiResponse(**{"get": "/predictions", "parameters": {}, "errors": [], "results": 1, "response": mock_predictions_response["response"]})
+
+    with patch.object(api_service, "get_predictions", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = api_response
+
+        result = await api_service.get_predictions_formatted(fixture=1035000)
+
+        assert "predictions" in result
+        assert result["predictions"]["winner"]["name"] == "Manchester United"
+        assert result["predictions"]["advice"] == "Manchester United or draw"
+        assert result["predictions"]["under_over"] == "Over 2.5"

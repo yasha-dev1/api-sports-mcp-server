@@ -908,3 +908,576 @@ class ApiSportsService:
                 "error": f"Failed to retrieve team statistics: {str(e)}",
                 "request_id": request_id,
             }
+
+    async def get_standings_formatted(
+        self,
+        league: int,
+        season: int,
+        team: int | None = None,
+    ) -> dict[str, Any]:
+        """
+        Get league standings with formatted output.
+        
+        Returns:
+            Dictionary containing formatted standings information
+        """
+        request_id = str(uuid.uuid4())
+
+        logger.info(
+            "Retrieving standings",
+            extra={"league": league, "season": season, "team": team, "request_id": request_id}
+        )
+
+        try:
+            # Check cache first if cache service is available
+            cache_key = f"standings:{league}:{season}:{team or 'all'}"
+            if self.cache_service:
+                cached_result = await self.cache_service.get(cache_key)
+                if cached_result:
+                    logger.debug(
+                        "Returning cached standings result",
+                        extra={"request_id": request_id}
+                    )
+                    return cached_result
+
+            # Make API request
+            response = await self.get_standings(
+                league=league,
+                season=season,
+                team=team
+            )
+
+            # Process response
+            if not response.response or not response.response[0]:
+                return {
+                    "error": "No standings found for the specified parameters",
+                    "request_id": request_id,
+                }
+
+            standings_data = []
+            league_info = response.response[0].get("league", {})
+            
+            # Extract standings from the response
+            standings_list = league_info.get("standings", [])
+            if standings_list and isinstance(standings_list[0], list):
+                # API returns nested array for standings
+                standings_list = standings_list[0]
+            
+            for standing in standings_list:
+                formatted_standing = {
+                    "rank": standing.get("rank"),
+                    "team": standing.get("team", {}),
+                    "points": standing.get("points"),
+                    "goalsDiff": standing.get("goalsDiff"),
+                    "group": standing.get("group"),
+                    "form": standing.get("form"),
+                    "status": standing.get("status"),
+                    "description": standing.get("description"),
+                    "all": standing.get("all", {}),
+                    "home": standing.get("home", {}),
+                    "away": standing.get("away", {}),
+                    "update": standing.get("update"),
+                }
+                standings_data.append(formatted_standing)
+
+            result = {
+                "league": {
+                    "id": league_info.get("id"),
+                    "name": league_info.get("name"),
+                    "country": league_info.get("country"),
+                    "logo": league_info.get("logo"),
+                    "flag": league_info.get("flag"),
+                    "season": league_info.get("season"),
+                },
+                "standings": standings_data,
+                "count": len(standings_data),
+                "request_id": request_id,
+            }
+
+            # Cache result if cache service is available (30 minutes TTL)
+            if self.cache_service:
+                await self.cache_service.set(cache_key, result, "standings")
+
+            logger.success(
+                f"Retrieved standings for {len(standings_data)} teams",
+                extra={"count": len(standings_data), "request_id": request_id}
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(
+                f"Error retrieving standings: {str(e)}",
+                extra={"error": str(e), "request_id": request_id}
+            )
+            return {
+                "error": f"Failed to retrieve standings: {str(e)}",
+                "request_id": request_id,
+            }
+
+    async def get_head2head_formatted(
+        self,
+        h2h: str,
+        date: str | None = None,
+        league: int | None = None,
+        season: int | None = None,
+        last: int | None = None,
+        next: int | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        status: str | None = None,
+        venue: int | None = None,
+        timezone: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Get head-to-head fixtures between two teams with formatted output.
+        
+        Args:
+            h2h: Teams IDs separated by a dash (e.g., "33-34")
+            
+        Returns:
+            Dictionary containing formatted head-to-head fixtures
+        """
+        request_id = str(uuid.uuid4())
+
+        # Validate h2h format
+        if not h2h or '-' not in h2h:
+            return {
+                "error": "h2h parameter must be in format 'team1-team2' (e.g., '33-34')",
+                "request_id": request_id,
+            }
+
+        # Validate dates if provided
+        for date_param, date_value in [("date", date), ("from_date", from_date), ("to_date", to_date)]:
+            if date_value:
+                try:
+                    datetime.strptime(date_value, "%Y-%m-%d")
+                except ValueError:
+                    return {
+                        "error": f"{date_param} must be in YYYY-MM-DD format",
+                        "request_id": request_id,
+                    }
+
+        logger.info(
+            "Retrieving head-to-head fixtures",
+            extra={"h2h": h2h, "request_id": request_id}
+        )
+
+        try:
+            # Make API request
+            response = await self.get_fixtures_head2head(
+                h2h=h2h,
+                date=date,
+                league=league,
+                season=season,
+                last=last,
+                next=next,
+                from_date=from_date,
+                to_date=to_date,
+                status=status,
+                venue=venue,
+                timezone=timezone,
+            )
+
+            # Process response (similar to fixtures)
+            fixtures_data = []
+            for item in response.response:
+                fixture_info = item.get("fixture", {})
+                league_info = item.get("league", {})
+                teams_info = item.get("teams", {})
+                goals_info = item.get("goals", {})
+                score_info = item.get("score", {})
+
+                fixture_data = {
+                    "id": fixture_info.get("id"),
+                    "referee": fixture_info.get("referee"),
+                    "timezone": fixture_info.get("timezone"),
+                    "date": fixture_info.get("date"),
+                    "timestamp": fixture_info.get("timestamp"),
+                    "venue": fixture_info.get("venue"),
+                    "status": fixture_info.get("status", {}),
+                    "league": league_info,
+                    "teams": teams_info,
+                    "goals": goals_info,
+                    "score": score_info,
+                }
+                fixtures_data.append(fixture_data)
+
+            # Calculate statistics
+            team_ids = h2h.split('-')
+            team1_wins = 0
+            team2_wins = 0
+            draws = 0
+            
+            for fixture in fixtures_data:
+                if fixture.get("status", {}).get("short") in ["FT", "AET", "PEN"]:
+                    home_id = str(fixture.get("teams", {}).get("home", {}).get("id"))
+                    away_id = str(fixture.get("teams", {}).get("away", {}).get("id"))
+                    home_goals = fixture.get("goals", {}).get("home")
+                    away_goals = fixture.get("goals", {}).get("away")
+                    
+                    if home_goals is not None and away_goals is not None:
+                        if home_goals > away_goals:
+                            if home_id == team_ids[0]:
+                                team1_wins += 1
+                            else:
+                                team2_wins += 1
+                        elif away_goals > home_goals:
+                            if away_id == team_ids[0]:
+                                team1_wins += 1
+                            else:
+                                team2_wins += 1
+                        else:
+                            draws += 1
+
+            result = {
+                "fixtures": fixtures_data,
+                "count": len(fixtures_data),
+                "statistics": {
+                    "team1_wins": team1_wins,
+                    "team2_wins": team2_wins,
+                    "draws": draws,
+                    "total_games": team1_wins + team2_wins + draws,
+                },
+                "request_id": request_id,
+            }
+
+            logger.success(
+                f"Found {len(fixtures_data)} head-to-head fixtures",
+                extra={"count": len(fixtures_data), "request_id": request_id}
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(
+                f"Error retrieving head-to-head fixtures: {str(e)}",
+                extra={"error": str(e), "request_id": request_id}
+            )
+            return {
+                "error": f"Failed to retrieve head-to-head fixtures: {str(e)}",
+                "request_id": request_id,
+            }
+
+    async def get_fixture_statistics_formatted(self, fixture: int) -> dict[str, Any]:
+        """
+        Get detailed statistics for a specific fixture with formatted output.
+        
+        Returns:
+            Dictionary containing formatted fixture statistics
+        """
+        request_id = str(uuid.uuid4())
+
+        logger.info(
+            "Retrieving fixture statistics",
+            extra={"fixture": fixture, "request_id": request_id}
+        )
+
+        try:
+            # Check cache first if cache service is available
+            cache_key = f"fixture_stats:{fixture}"
+            if self.cache_service:
+                cached_result = await self.cache_service.get(cache_key)
+                if cached_result:
+                    logger.debug(
+                        "Returning cached fixture statistics",
+                        extra={"request_id": request_id}
+                    )
+                    return cached_result
+
+            # Make API request
+            response = await self.get_fixture_statistics(fixture)
+
+            # Process response
+            if not response.response:
+                return {
+                    "error": "No statistics found for this fixture",
+                    "request_id": request_id,
+                }
+
+            stats_data = []
+            for team_stats in response.response:
+                team_info = team_stats.get("team", {})
+                statistics = team_stats.get("statistics", [])
+                
+                # Convert statistics array to dictionary for easier access
+                stats_dict = {}
+                for stat in statistics:
+                    stat_type = stat.get("type")
+                    stat_value = stat.get("value")
+                    stats_dict[stat_type] = stat_value
+                
+                stats_data.append({
+                    "team": team_info,
+                    "statistics": stats_dict,
+                })
+
+            result = {
+                "fixture_id": fixture,
+                "teams": stats_data,
+                "request_id": request_id,
+            }
+
+            # Cache result if cache service is available (completed fixtures cache forever)
+            if self.cache_service:
+                await self.cache_service.set(cache_key, result, "fixtures_completed")
+
+            logger.success(
+                "Retrieved fixture statistics successfully",
+                extra={"fixture": fixture, "request_id": request_id}
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(
+                f"Error retrieving fixture statistics: {str(e)}",
+                extra={"error": str(e), "request_id": request_id}
+            )
+            return {
+                "error": f"Failed to retrieve fixture statistics: {str(e)}",
+                "request_id": request_id,
+            }
+
+    async def get_fixture_events_formatted(self, fixture: int) -> dict[str, Any]:
+        """
+        Get events timeline for a specific fixture with formatted output.
+        
+        Returns:
+            Dictionary containing formatted fixture events
+        """
+        request_id = str(uuid.uuid4())
+
+        logger.info(
+            "Retrieving fixture events",
+            extra={"fixture": fixture, "request_id": request_id}
+        )
+
+        try:
+            # Check cache first if cache service is available
+            cache_key = f"fixture_events:{fixture}"
+            if self.cache_service:
+                cached_result = await self.cache_service.get(cache_key)
+                if cached_result:
+                    logger.debug(
+                        "Returning cached fixture events",
+                        extra={"request_id": request_id}
+                    )
+                    return cached_result
+
+            # Make API request
+            response = await self.get_fixture_events(fixture)
+
+            # Process response
+            events_data = []
+            for event in response.response:
+                formatted_event = {
+                    "time": event.get("time", {}),
+                    "team": event.get("team", {}),
+                    "player": event.get("player", {}),
+                    "assist": event.get("assist", {}),
+                    "type": event.get("type"),
+                    "detail": event.get("detail"),
+                    "comments": event.get("comments"),
+                }
+                events_data.append(formatted_event)
+
+            # Sort events by time
+            events_data.sort(key=lambda x: (x["time"].get("elapsed", 0), x["time"].get("extra", 0) or 0))
+
+            result = {
+                "fixture_id": fixture,
+                "events": events_data,
+                "count": len(events_data),
+                "request_id": request_id,
+            }
+
+            # Cache result if cache service is available (completed fixtures cache forever)
+            if self.cache_service:
+                await self.cache_service.set(cache_key, result, "fixtures_completed")
+
+            logger.success(
+                f"Retrieved {len(events_data)} events for fixture",
+                extra={"count": len(events_data), "request_id": request_id}
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(
+                f"Error retrieving fixture events: {str(e)}",
+                extra={"error": str(e), "request_id": request_id}
+            )
+            return {
+                "error": f"Failed to retrieve fixture events: {str(e)}",
+                "request_id": request_id,
+            }
+
+    async def get_fixture_lineups_formatted(self, fixture: int) -> dict[str, Any]:
+        """
+        Get lineups for a specific fixture with formatted output.
+        
+        Returns:
+            Dictionary containing formatted fixture lineups
+        """
+        request_id = str(uuid.uuid4())
+
+        logger.info(
+            "Retrieving fixture lineups",
+            extra={"fixture": fixture, "request_id": request_id}
+        )
+
+        try:
+            # Check cache first if cache service is available
+            cache_key = f"fixture_lineups:{fixture}"
+            if self.cache_service:
+                cached_result = await self.cache_service.get(cache_key)
+                if cached_result:
+                    logger.debug(
+                        "Returning cached fixture lineups",
+                        extra={"request_id": request_id}
+                    )
+                    return cached_result
+
+            # Make API request
+            response = await self.get_fixture_lineups(fixture)
+
+            # Process response
+            if not response.response:
+                return {
+                    "error": "No lineups found for this fixture",
+                    "request_id": request_id,
+                }
+
+            lineups_data = []
+            for team_lineup in response.response:
+                team_info = team_lineup.get("team", {})
+                formation = team_lineup.get("formation")
+                starting_xi = team_lineup.get("startXI", [])
+                substitutes = team_lineup.get("substitutes", [])
+                coach = team_lineup.get("coach", {})
+                
+                lineup_data = {
+                    "team": team_info,
+                    "formation": formation,
+                    "coach": coach,
+                    "startingXI": [
+                        {
+                            "player": player.get("player", {}),
+                        }
+                        for player in starting_xi
+                    ],
+                    "substitutes": [
+                        {
+                            "player": player.get("player", {}),
+                        }
+                        for player in substitutes
+                    ],
+                }
+                lineups_data.append(lineup_data)
+
+            result = {
+                "fixture_id": fixture,
+                "lineups": lineups_data,
+                "request_id": request_id,
+            }
+
+            # Cache result if cache service is available
+            if self.cache_service:
+                await self.cache_service.set(cache_key, result, "fixtures_upcoming")
+
+            logger.success(
+                "Retrieved fixture lineups successfully",
+                extra={"fixture": fixture, "request_id": request_id}
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(
+                f"Error retrieving fixture lineups: {str(e)}",
+                extra={"error": str(e), "request_id": request_id}
+            )
+            return {
+                "error": f"Failed to retrieve fixture lineups: {str(e)}",
+                "request_id": request_id,
+            }
+
+    async def get_predictions_formatted(self, fixture: int) -> dict[str, Any]:
+        """
+        Get predictions for a specific fixture with formatted output.
+        
+        Returns:
+            Dictionary containing formatted fixture predictions
+        """
+        request_id = str(uuid.uuid4())
+
+        logger.info(
+            "Retrieving fixture predictions",
+            extra={"fixture": fixture, "request_id": request_id}
+        )
+
+        try:
+            # Check cache first if cache service is available
+            cache_key = f"predictions:{fixture}"
+            if self.cache_service:
+                cached_result = await self.cache_service.get(cache_key)
+                if cached_result:
+                    logger.debug(
+                        "Returning cached predictions",
+                        extra={"request_id": request_id}
+                    )
+                    return cached_result
+
+            # Make API request
+            response = await self.get_predictions(fixture)
+
+            # Process response
+            if not response.response or not response.response[0]:
+                return {
+                    "error": "No predictions found for this fixture",
+                    "request_id": request_id,
+                }
+
+            prediction_data = response.response[0]
+            
+            # Extract and format prediction data
+            formatted_prediction = {
+                "winner": prediction_data.get("winner", {}),
+                "win_or_draw": prediction_data.get("win_or_draw"),
+                "under_over": prediction_data.get("under_over"),
+                "goals": prediction_data.get("goals", {}),
+                "advice": prediction_data.get("advice"),
+                "percent": prediction_data.get("percent", {}),
+                "league": prediction_data.get("league", {}),
+                "teams": prediction_data.get("teams", {}),
+                "comparison": prediction_data.get("comparison", {}),
+                "h2h": prediction_data.get("h2h", []),
+            }
+
+            result = {
+                "fixture_id": fixture,
+                "predictions": formatted_prediction,
+                "request_id": request_id,
+            }
+
+            # Cache result if cache service is available (1 hour TTL)
+            if self.cache_service:
+                await self.cache_service.set(cache_key, result, "predictions")
+
+            logger.success(
+                "Retrieved fixture predictions successfully",
+                extra={"fixture": fixture, "request_id": request_id}
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(
+                f"Error retrieving predictions: {str(e)}",
+                extra={"error": str(e), "request_id": request_id}
+            )
+            return {
+                "error": f"Failed to retrieve predictions: {str(e)}",
+                "request_id": request_id,
+            }

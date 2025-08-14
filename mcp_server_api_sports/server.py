@@ -176,6 +176,138 @@ class ApiSportsMCPServer:
                         "required": ["league", "season", "team"]
                     },
                 ),
+                Tool(
+                    name="standings",
+                    description="Get current league standings/table",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "league": {
+                                "type": "integer",
+                                "description": "League ID (required)"
+                            },
+                            "season": {
+                                "type": "integer",
+                                "description": "Season year YYYY (required)"
+                            },
+                            "team": {
+                                "type": "integer",
+                                "description": "Optional team ID to get standings for a specific team"
+                            }
+                        },
+                        "required": ["league", "season"]
+                    },
+                ),
+                Tool(
+                    name="head2head",
+                    description="Get head-to-head comparison between two teams",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "h2h": {
+                                "type": "string",
+                                "description": "Teams IDs separated by dash, e.g. '33-34' (required)"
+                            },
+                            "date": {
+                                "type": "string",
+                                "description": "Date in YYYY-MM-DD format"
+                            },
+                            "league": {
+                                "type": "integer",
+                                "description": "League ID"
+                            },
+                            "season": {
+                                "type": "integer",
+                                "description": "Season year (YYYY)"
+                            },
+                            "last": {
+                                "type": "integer",
+                                "description": "Last N matches"
+                            },
+                            "next": {
+                                "type": "integer",
+                                "description": "Next N matches"
+                            },
+                            "from": {
+                                "type": "string",
+                                "description": "Start date (YYYY-MM-DD)"
+                            },
+                            "to": {
+                                "type": "string",
+                                "description": "End date (YYYY-MM-DD)"
+                            },
+                            "status": {
+                                "type": "string",
+                                "description": "Match status"
+                            },
+                            "venue": {
+                                "type": "integer",
+                                "description": "Venue ID"
+                            },
+                            "timezone": {
+                                "type": "string",
+                                "description": "Timezone for dates"
+                            }
+                        },
+                        "required": ["h2h"]
+                    },
+                ),
+                Tool(
+                    name="fixture_statistics",
+                    description="Get detailed match statistics for a specific fixture",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "fixture": {
+                                "type": "integer",
+                                "description": "Fixture ID (required)"
+                            }
+                        },
+                        "required": ["fixture"]
+                    },
+                ),
+                Tool(
+                    name="fixture_events",
+                    description="Get timeline of events (goals, cards, substitutions) for a fixture",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "fixture": {
+                                "type": "integer",
+                                "description": "Fixture ID (required)"
+                            }
+                        },
+                        "required": ["fixture"]
+                    },
+                ),
+                Tool(
+                    name="fixture_lineups",
+                    description="Get team lineups and formations for a fixture",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "fixture": {
+                                "type": "integer",
+                                "description": "Fixture ID (required)"
+                            }
+                        },
+                        "required": ["fixture"]
+                    },
+                ),
+                Tool(
+                    name="predictions",
+                    description="Get match predictions and betting advice for a fixture",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "fixture": {
+                                "type": "integer",
+                                "description": "Fixture ID (required)"
+                            }
+                        },
+                        "required": ["fixture"]
+                    },
+                ),
             ]
 
             logger.debug(f"Listed {len(tools)} tools")
@@ -205,6 +337,29 @@ class ApiSportsMCPServer:
 
                 elif name == "team_statistics":
                     result = await self.api_service.get_team_statistics_formatted(**arguments)
+
+                elif name == "standings":
+                    result = await self.api_service.get_standings_formatted(**arguments)
+
+                elif name == "head2head":
+                    # Map 'from' and 'to' parameters to 'from_date' and 'to_date'
+                    if "from" in arguments:
+                        arguments["from_date"] = arguments.pop("from")
+                    if "to" in arguments:
+                        arguments["to_date"] = arguments.pop("to")
+                    result = await self.api_service.get_head2head_formatted(**arguments)
+
+                elif name == "fixture_statistics":
+                    result = await self.api_service.get_fixture_statistics_formatted(**arguments)
+
+                elif name == "fixture_events":
+                    result = await self.api_service.get_fixture_events_formatted(**arguments)
+
+                elif name == "fixture_lineups":
+                    result = await self.api_service.get_fixture_lineups_formatted(**arguments)
+
+                elif name == "predictions":
+                    result = await self.api_service.get_predictions_formatted(**arguments)
 
                 else:
                     error_msg = f"Unknown tool: {name}"
