@@ -633,6 +633,12 @@ class ApiSportsService:
                 "request_id": request_id,
             }
             
+        if team is not None and season is None:
+            return {
+                "error": "When using 'team' parameter, 'season' is required",
+                "request_id": request_id,
+            }
+            
         if last and last > 99:
             return {
                 "error": "Last parameter must be 2 digits or less",

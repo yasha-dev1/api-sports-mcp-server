@@ -73,7 +73,7 @@ class ApiSportsHTTPServer:
                 ),
                 Tool(
                     name="fixtures_get",
-                    description="Retrieve football fixtures (matches) with comprehensive filtering. Note: When using 'league' parameter, 'season' is required.",
+                    description="Retrieve football fixtures (matches) with comprehensive filtering. Note: When using 'league' or 'team' parameter, 'season' is required.",
                     inputSchema={
                         "type": "object",
                         "properties": {
@@ -82,8 +82,8 @@ class ApiSportsHTTPServer:
                             "live": {"type": "string", "description": "'all' or league IDs for live fixtures"},
                             "date": {"type": "string", "description": "Date in YYYY-MM-DD format"},
                             "league": {"type": "integer", "description": "League ID (requires 'season' parameter)"},
-                            "season": {"type": "integer", "description": "Season year (YYYY) - required when using 'league'"},
-                            "team": {"type": "integer", "description": "Team ID"},
+                            "season": {"type": "integer", "description": "Season year (YYYY) - required when using 'league' or 'team'"},
+                            "team": {"type": "integer", "description": "Team ID (requires 'season' parameter)"},
                             "last": {"type": "integer", "description": "Last N matches (max 99)"},
                             "next": {"type": "integer", "description": "Next N matches (max 99)"},
                             "from": {"type": "string", "description": "Start date (YYYY-MM-DD)"},
