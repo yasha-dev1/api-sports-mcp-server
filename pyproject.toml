@@ -36,7 +36,6 @@ dev = [
 
 [project.scripts]
 mcp-server-api-sports = "mcp_server_api_sports.server:run"
-mcp-server-api-sports-http = "mcp_server_api_sports.server_http:main"
 mcp-server-api-sports-fastmcp = "mcp_server_api_sports.server_fastmcp:run_http"
 
 [tool.pytest.ini_options]
