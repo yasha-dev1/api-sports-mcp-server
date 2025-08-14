@@ -16,7 +16,7 @@ COPY pyproject.toml poetry.lock* ./
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir poetry && \
     poetry config virtualenvs.create false && \
-    poetry install --no-dev --no-interaction --no-ansi
+    poetry install --only main --no-interaction --no-ansi --no-root
 
 # Final stage
 FROM python:3.11-slim-bookworm
@@ -48,18 +48,20 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --chown=mcp:mcp mcp_server_api_sports /app/mcp_server_api_sports
 COPY --chown=mcp:mcp pyproject.toml /app/
 
-# Create logs directory
-RUN mkdir -p /app/logs && chown -R mcp:mcp /app/logs
+# Create logs directory with proper permissions
+RUN mkdir -p /app/logs && \
+    chown -R mcp:mcp /app/logs && \
+    chmod 755 /app/logs
 
 # Switch to non-root user
 USER mcp
 
 # Expose port
-EXPOSE 8080
+EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 # Default command - run HTTP server with FastMCP
 CMD ["python", "-m", "mcp_server_api_sports.server_fastmcp", "--http"]

@@ -20,8 +20,7 @@ api_service = ApiSportsService(cache_service=cache_service)
 
 # Create FastMCP server instance
 mcp = FastMCP(
-    name=settings.mcp_server_name,
-    version=settings.mcp_server_version
+    name=settings.mcp_server_name
 )
 
 # Tool: teams_search
@@ -237,14 +236,12 @@ def run_http(host: str = "0.0.0.0", port: int = 8080) -> None:
         host: Host to bind to (default: 0.0.0.0)
         port: Port to bind to (default: 8080)
     """
-    # Set environment variables for FastMCP HTTP server
-    os.environ["MCP_HTTP_HOST"] = host
-    os.environ["MCP_HTTP_PORT"] = str(port)
-    
     logger.info(f"Starting FastMCP HTTP server on {host}:{port}")
     logger.info(f"Server: {settings.mcp_server_name} v{settings.mcp_server_version}")
+    logger.info("Note: FastMCP currently runs on port 8000 internally")
     
     # Run with streamable-http transport
+    # Note: FastMCP currently doesn't respect port configuration and runs on 8000
     mcp.run(transport="streamable-http")
 
 
@@ -262,6 +259,9 @@ if __name__ == "__main__":
     
     # Check command line arguments
     if len(sys.argv) > 1 and sys.argv[1] == "--http":
-        run_http()
+        # Get host and port from environment variables
+        host = os.environ.get("HTTP_HOST", "0.0.0.0")
+        port = int(os.environ.get("HTTP_PORT", "8080"))
+        run_http(host=host, port=port)
     else:
         run_stdio()

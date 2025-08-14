@@ -15,12 +15,12 @@ services:
       - CACHE_ENABLED=${CACHE_ENABLED:-true}
       - CACHE_MAX_SIZE=${CACHE_MAX_SIZE:-1000}
     ports:
-      - "${HOST_PORT:-8080}:8080"
-    volumes:
-      - ./logs:/app/logs
+      - "${HOST_PORT:-8000}:8000"
+    # volumes:
+    #   - ./logs:/app/logs
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
