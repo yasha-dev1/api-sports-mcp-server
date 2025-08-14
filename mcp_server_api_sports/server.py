@@ -20,7 +20,10 @@ class ApiSportsMCPServer:
 
     def __init__(self) -> None:
         self.settings = get_settings()
-        self.server: Server = Server(self.settings.mcp_server_name)
+        self.server: Server = Server(
+            name=self.settings.mcp_server_name,
+            version=self.settings.mcp_server_version
+        )
 
         # Initialize services
         self.cache_service = CacheService()
@@ -409,7 +412,11 @@ class ApiSportsMCPServer:
             # Run the server
             async with stdio_server() as (read_stream, write_stream):
                 logger.info("MCP server started successfully")
-                await self.server.run(read_stream, write_stream, None)  # type: ignore[arg-type]
+                await self.server.run(
+                    read_stream, 
+                    write_stream, 
+                    self.server.create_initialization_options()
+                )
 
         except KeyboardInterrupt:
             logger.info("Server interrupted by user")
