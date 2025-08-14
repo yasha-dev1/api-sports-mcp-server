@@ -103,13 +103,15 @@ def _register_tools():
     ) -> dict[str, Any]:
         """Retrieve football fixtures (matches) with comprehensive filtering.
         
+        Note: When using 'league' parameter, 'season' is required.
+        
         Args:
             id: Fixture ID
             ids: Multiple fixture IDs (delimiter '-', max 20)
             live: 'all' or league IDs for live fixtures
             date: Date in YYYY-MM-DD format
-            league: League ID
-            season: Season year (YYYY)
+            league: League ID (requires 'season' parameter)
+            season: Season year (YYYY) - required when using 'league'
             team: Team ID
             last: Last N matches (max 99)
             next: Next N matches (max 99)

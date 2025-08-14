@@ -86,7 +86,7 @@ class ApiSportsMCPServer:
                 ),
                 Tool(
                     name="fixtures_get",
-                    description="Retrieve football fixtures (matches) with comprehensive filtering",
+                    description="Retrieve football fixtures (matches) with comprehensive filtering. Note: When using 'league' parameter, 'season' is required.",
                     inputSchema={
                         "type": "object",
                         "properties": {
@@ -108,11 +108,11 @@ class ApiSportsMCPServer:
                             },
                             "league": {
                                 "type": "integer",
-                                "description": "League ID"
+                                "description": "League ID (requires 'season' parameter)"
                             },
                             "season": {
                                 "type": "integer",
-                                "description": "Season year (YYYY)"
+                                "description": "Season year (YYYY) - required when using 'league'"
                             },
                             "team": {
                                 "type": "integer",
