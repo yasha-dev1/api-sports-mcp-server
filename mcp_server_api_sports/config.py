@@ -1,5 +1,7 @@
 """Configuration management for API-Sports MCP Server."""
 
+import os
+from pathlib import Path
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -9,9 +11,15 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # Try multiple .env locations for better compatibility
+        env_file=[
+            ".env",  # Current directory
+            Path(__file__).parent.parent / ".env",  # Project root
+            os.path.expanduser("~/.config/api-sports-mcp/.env"),  # User config
+        ],
         env_file_encoding="utf-8",
         case_sensitive=False,
+        extra="ignore",  # Ignore extra fields
     )
 
     # API-Sports Configuration
@@ -107,5 +115,20 @@ def get_settings() -> Settings:
     """Get or create settings instance."""
     global settings
     if settings is None:
+        # Try to explicitly load .env file for better compatibility
+        from dotenv import load_dotenv
+        
+        # Try loading from multiple locations
+        env_paths = [
+            ".env",
+            Path(__file__).parent.parent / ".env",
+            os.path.expanduser("~/.config/api-sports-mcp/.env"),
+        ]
+        
+        for env_path in env_paths:
+            if Path(env_path).exists():
+                load_dotenv(env_path, override=False)
+                break
+        
         settings = Settings()
     return settings
