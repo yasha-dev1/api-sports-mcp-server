@@ -180,22 +180,57 @@ class ApiSportsService:
                     await asyncio.sleep(sleep_time)
                     continue
 
-                response.raise_for_status()
+                # Only allow 200 and 429 status codes
+                if response.status_code not in [200, 429]:
+                    error_text = f"API returned status {response.status_code}"
+                    try:
+                        error_details = response.json()
+                        if isinstance(error_details, dict) and error_details.get("message"):
+                            error_text += f": {error_details['message']}"
+                        else:
+                            error_text += f": {response.text}"
+                    except:
+                        error_text += f": {response.text}"
+                    
+                    logger.error(
+                        f"HTTP error {response.status_code}",
+                        extra={
+                            "status_code": response.status_code,
+                            "endpoint": endpoint,
+                            "response_text": response.text[:500],
+                            "request_id": request_id,
+                        }
+                    )
+                    raise httpx.HTTPStatusError(error_text, request=response.request, response=response)
 
                 # Parse response
                 data = response.json()
                 api_response = ApiResponse(**data)
 
-                # Check for API errors
+                # Check for API errors in the response body
                 if api_response.errors:
-                    logger.error(
-                        "API returned errors",
-                        extra={
-                            "errors": api_response.errors,
-                            "endpoint": endpoint,
-                            "request_id": request_id,
-                        }
-                    )
+                    # Format error message from API errors
+                    if isinstance(api_response.errors, list):
+                        error_msg = "; ".join(str(err) for err in api_response.errors if err)
+                    elif isinstance(api_response.errors, dict):
+                        error_items = []
+                        for key, value in api_response.errors.items():
+                            if value:
+                                error_items.append(f"{key}: {value}")
+                        error_msg = "; ".join(error_items)
+                    else:
+                        error_msg = str(api_response.errors)
+                    
+                    if error_msg:  # Only raise if there are actual errors
+                        logger.error(
+                            "API returned errors in response",
+                            extra={
+                                "errors": api_response.errors,
+                                "endpoint": endpoint,
+                                "request_id": request_id,
+                            }
+                        )
+                        raise ValueError(f"API Error: {error_msg}")
 
                 logger.success(
                     f"Request successful: {api_response.results} results",
