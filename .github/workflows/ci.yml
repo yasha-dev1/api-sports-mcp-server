@@ -44,7 +44,7 @@ jobs:
     
     - name: Run tests with pytest
       env:
-        API_SPORTS_API_KEY: test_key
+        API_SPORTS_API_KEY: test_api_key
       run: |
         pytest tests --cov=mcp_server_api_sports --cov-report=xml --cov-report=term
     
