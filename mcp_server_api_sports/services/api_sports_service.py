@@ -462,6 +462,48 @@ class ApiSportsService:
         """Get fixture predictions."""
         return await self.make_request("/predictions", {"fixture": str(fixture)})  # type: ignore[no-any-return]
 
+    async def get_leagues(
+        self,
+        id: int | None = None,
+        name: str | None = None,
+        country: str | None = None,
+        code: str | None = None,
+        season: int | None = None,
+        team: int | None = None,
+        type: str | None = None,
+        current: str | None = None,
+        search: str | None = None,
+        last: int | None = None,
+    ) -> ApiResponse:
+        """Get leagues information."""
+        params: dict[str, Any] = {}
+        if id is not None:
+            params["id"] = str(id)
+        if name:
+            params["name"] = name
+        if country:
+            params["country"] = country
+        if code:
+            params["code"] = code
+        if season is not None:
+            params["season"] = str(season)
+        if team is not None:
+            params["team"] = str(team)
+        if type:
+            params["type"] = type
+        if current:
+            params["current"] = current
+        if search:
+            params["search"] = search
+        if last is not None:
+            params["last"] = str(last)
+
+        return await self.make_request("/leagues", params)  # type: ignore[no-any-return]
+
+    async def get_seasons(self) -> ApiResponse:
+        """Get available seasons."""
+        return await self.make_request("/leagues/seasons")  # type: ignore[no-any-return]
+
     # Business logic methods with validation and formatting
 
     async def search_teams(
@@ -1539,5 +1581,140 @@ class ApiSportsService:
             )
             return {
                 "error": f"Failed to retrieve predictions: {str(e)}",
+                "request_id": request_id,
+            }
+
+    async def search_leagues(
+        self,
+        id: int | None = None,
+        name: str | None = None,
+        country: str | None = None,
+        code: str | None = None,
+        season: int | None = None,
+        team: int | None = None,
+        type: str | None = None,
+        current: str | None = None,
+        search: str | None = None,
+        last: int | None = None,
+    ) -> dict[str, Any]:
+        """
+        Search for leagues with various filters and return formatted data.
+        
+        Args:
+            id: League ID
+            name: League name
+            country: Country name
+            code: Country code (2-6 characters, e.g. FR, GB-ENG, IT)
+            season: Season year (YYYY)
+            team: Team ID
+            type: Type of league ("league" or "cup")
+            current: Return active seasons or last completed ("true" or "false")
+            search: Search string (min 3 chars) for league name or country
+            last: Last N leagues/cups added to the API (max 99)
+        
+        Returns:
+            Dictionary containing formatted league information
+        """
+        request_id = str(uuid.uuid4())
+
+        # Validate search parameter
+        if search and len(search) < 3:
+            return {
+                "error": "Search parameter must be at least 3 characters long",
+                "request_id": request_id,
+            }
+
+        # Validate type parameter
+        if type and type not in ["league", "cup"]:
+            return {
+                "error": "Type parameter must be 'league' or 'cup'",
+                "request_id": request_id,
+            }
+
+        # Validate current parameter
+        if current and current not in ["true", "false"]:
+            return {
+                "error": "Current parameter must be 'true' or 'false'",
+                "request_id": request_id,
+            }
+
+        # Validate last parameter
+        if last is not None and (last < 1 or last > 99):
+            return {
+                "error": "Last parameter must be between 1 and 99",
+                "request_id": request_id,
+            }
+
+        # Build parameters for cache key
+        params: dict[str, Any] = {}
+        if id is not None:
+            params["id"] = str(id)
+        if name:
+            params["name"] = name
+        if country:
+            params["country"] = country
+        if code:
+            params["code"] = code
+        if season is not None:
+            params["season"] = str(season)
+        if team is not None:
+            params["team"] = str(team)
+        if type:
+            params["type"] = type
+        if current:
+            params["current"] = current
+        if search:
+            params["search"] = search
+        if last is not None:
+            params["last"] = str(last)
+
+        logger.info(
+            "Searching leagues",
+            extra={"params": params, "request_id": request_id}
+        )
+
+        try:
+            # Make API request
+            response = await self.get_leagues(
+                id=id,
+                name=name,
+                country=country,
+                code=code,
+                season=season,
+                team=team,
+                type=type,
+                current=current,
+                search=search,
+                last=last,
+            )
+
+            # Process response
+            result = {
+                "success": True,
+                "leagues": response.response,
+                "total_results": response.results,
+                "request_id": request_id,
+                "api_credits": {
+                    "get": response.get,
+                    "parameters": response.parameters,
+                    "errors": response.errors,
+                    "results": response.results,
+                },
+            }
+
+            logger.success(
+                "Retrieved leagues successfully",
+                extra={"total_results": response.results, "request_id": request_id}
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(
+                f"Error retrieving leagues: {str(e)}",
+                extra={"error": str(e), "request_id": request_id}
+            )
+            return {
+                "error": f"Failed to retrieve leagues: {str(e)}",
                 "request_id": request_id,
             }

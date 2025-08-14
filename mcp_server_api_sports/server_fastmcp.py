@@ -251,6 +251,39 @@ def _register_tools():
         logger.info(f"Getting predictions: fixture={fixture}")
         return await api_service.get_predictions_formatted(fixture=fixture)
 
+    # Tool: leagues_search
+    @mcp.tool()
+    async def leagues_search(
+        id: int | None = None,
+        name: str | None = None,
+        country: str | None = None,
+        code: str | None = None,
+        season: int | None = None,
+        team: int | None = None,
+        type: str | None = None,
+        current: str | None = None,
+        search: str | None = None,
+        last: int | None = None,
+    ) -> dict[str, Any]:
+        """Get the list of available leagues and cups with comprehensive filtering.
+        
+        Args:
+            id: League ID
+            name: League name
+            country: Country name
+            code: Country code (2-6 characters, e.g. FR, GB-ENG, IT)
+            season: Season year (YYYY)
+            team: Team ID
+            type: Type of league ('league' or 'cup')
+            current: Return active seasons or last completed ('true' or 'false')
+            search: Search string for league name or country (minimum 3 characters)
+            last: Last N leagues/cups added to the API (max 99)
+        """
+        logger.info(f"Searching leagues with params: {locals()}")
+        return await api_service.search_leagues(
+            id=id, name=name, country=country, code=code, season=season,
+            team=team, type=type, current=current, search=search, last=last
+        )
 
 def run_http(host: str = "0.0.0.0", port: int = 8080) -> None:
     """Run the FastMCP server with HTTP transport.

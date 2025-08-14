@@ -311,6 +311,57 @@ class ApiSportsMCPServer:
                         "required": ["fixture"]
                     },
                 ),
+                Tool(
+                    name="leagues_search",
+                    description="Get the list of available leagues and cups with comprehensive filtering",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "description": "League ID"
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "League name"
+                            },
+                            "country": {
+                                "type": "string",
+                                "description": "Country name"
+                            },
+                            "code": {
+                                "type": "string",
+                                "description": "Country code (2-6 characters, e.g. FR, GB-ENG, IT)"
+                            },
+                            "season": {
+                                "type": "integer",
+                                "description": "Season year (YYYY)"
+                            },
+                            "team": {
+                                "type": "integer",
+                                "description": "Team ID"
+                            },
+                            "type": {
+                                "type": "string",
+                                "description": "Type of league ('league' or 'cup')",
+                                "enum": ["league", "cup"]
+                            },
+                            "current": {
+                                "type": "string",
+                                "description": "Return active seasons or last completed ('true' or 'false')",
+                                "enum": ["true", "false"]
+                            },
+                            "search": {
+                                "type": "string",
+                                "description": "Search string for league name or country (minimum 3 characters)"
+                            },
+                            "last": {
+                                "type": "integer",
+                                "description": "Last N leagues/cups added to the API (max 99)"
+                            }
+                        }
+                    },
+                ),
             ]
 
             logger.debug(f"Listed {len(tools)} tools")
@@ -409,6 +460,12 @@ class ApiSportsMCPServer:
 
                 elif name == "predictions":
                     result = await self.api_service.get_predictions_formatted(**cleaned_args)
+
+                elif name == "leagues_search":
+                    result = await self.api_service.search_leagues(**cleaned_args)
+
+                elif name == "seasons_get":
+                    result = await self.api_service.get_seasons_formatted()
 
                 else:
                     error_msg = f"Unknown tool: {name}"
