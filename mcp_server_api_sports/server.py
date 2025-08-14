@@ -325,44 +325,61 @@ class ApiSportsMCPServer:
             )
 
             try:
+                # Clean up arguments - remove empty strings and convert to proper types
+                cleaned_args = {}
+                for key, value in arguments.items():
+                    if value == "":
+                        # Skip empty strings - they should be treated as None/not provided
+                        continue
+                    elif isinstance(value, str) and value.isdigit():
+                        # Convert numeric strings to integers
+                        cleaned_args[key] = int(value)
+                    else:
+                        cleaned_args[key] = value
+                
+                logger.debug(
+                    f"Cleaned arguments for {name}",
+                    extra={"original": arguments, "cleaned": cleaned_args}
+                )
+                
                 result = None
 
                 if name == "teams_search":
-                    result = await self.api_service.search_teams(**arguments)
+                    result = await self.api_service.search_teams(**cleaned_args)
 
                 elif name == "fixtures_get":
                     # Map 'from' and 'to' parameters to 'from_date' and 'to_date'
-                    if "from" in arguments:
-                        arguments["from_date"] = arguments.pop("from")
-                    if "to" in arguments:
-                        arguments["to_date"] = arguments.pop("to")
-                    result = await self.api_service.search_fixtures(**arguments)
+                    if "from" in cleaned_args:
+                        cleaned_args["from_date"] = cleaned_args.pop("from")
+                    if "to" in cleaned_args:
+                        cleaned_args["to_date"] = cleaned_args.pop("to")
+                    result = await self.api_service.search_fixtures(**cleaned_args)
 
                 elif name == "team_statistics":
-                    result = await self.api_service.get_team_statistics_formatted(**arguments)
+                    result = await self.api_service.get_team_statistics_formatted(**cleaned_args)
 
                 elif name == "standings":
-                    result = await self.api_service.get_standings_formatted(**arguments)
+                    result = await self.api_service.get_standings_formatted(**cleaned_args)
 
                 elif name == "head2head":
                     # Map 'from' and 'to' parameters to 'from_date' and 'to_date'
-                    if "from" in arguments:
-                        arguments["from_date"] = arguments.pop("from")
-                    if "to" in arguments:
-                        arguments["to_date"] = arguments.pop("to")
-                    result = await self.api_service.get_head2head_formatted(**arguments)
+                    if "from" in cleaned_args:
+                        cleaned_args["from_date"] = cleaned_args.pop("from")
+                    if "to" in cleaned_args:
+                        cleaned_args["to_date"] = cleaned_args.pop("to")
+                    result = await self.api_service.get_head2head_formatted(**cleaned_args)
 
                 elif name == "fixture_statistics":
-                    result = await self.api_service.get_fixture_statistics_formatted(**arguments)
+                    result = await self.api_service.get_fixture_statistics_formatted(**cleaned_args)
 
                 elif name == "fixture_events":
-                    result = await self.api_service.get_fixture_events_formatted(**arguments)
+                    result = await self.api_service.get_fixture_events_formatted(**cleaned_args)
 
                 elif name == "fixture_lineups":
-                    result = await self.api_service.get_fixture_lineups_formatted(**arguments)
+                    result = await self.api_service.get_fixture_lineups_formatted(**cleaned_args)
 
                 elif name == "predictions":
-                    result = await self.api_service.get_predictions_formatted(**arguments)
+                    result = await self.api_service.get_predictions_formatted(**cleaned_args)
 
                 else:
                     error_msg = f"Unknown tool: {name}"
