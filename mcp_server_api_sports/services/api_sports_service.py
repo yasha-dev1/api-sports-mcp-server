@@ -647,6 +647,15 @@ class ApiSportsService:
             params["season"] = str(season)
         if team is not None:
             params["team"] = str(team)
+            # If only team is provided without other filters, get next 10 fixtures
+            # This ensures we get meaningful results
+            if (season is None and not date and not from_date and 
+                not last and not next and not id and not ids and not live):
+                params["next"] = "10"
+                logger.info(
+                    f"Auto-adding next=10 for team-only query to get upcoming fixtures",
+                    extra={"team": team, "request_id": request_id}
+                )
         if last is not None:
             params["last"] = str(last)
         if next is not None:

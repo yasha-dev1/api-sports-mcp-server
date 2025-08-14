@@ -316,7 +316,7 @@ class ApiSportsMCPServer:
             logger.debug(f"Listed {len(tools)} tools")
             return tools
 
-        @self.server.call_tool(validate_input=False)
+        @self.server.call_tool()
         async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             """Execute a tool with given arguments."""
             logger.info(
