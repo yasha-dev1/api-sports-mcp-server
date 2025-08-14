@@ -50,7 +50,7 @@ class ApiSportsMCPServer:
                         "type": "object",
                         "properties": {
                             "id": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Team ID"
                             },
                             "name": {
@@ -58,11 +58,11 @@ class ApiSportsMCPServer:
                                 "description": "Team name"
                             },
                             "league": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "League ID"
                             },
                             "season": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Season year (YYYY)"
                             },
                             "country": {
@@ -74,7 +74,7 @@ class ApiSportsMCPServer:
                                 "description": "3-letter team code"
                             },
                             "venue": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Venue ID"
                             },
                             "search": {
@@ -91,7 +91,7 @@ class ApiSportsMCPServer:
                         "type": "object",
                         "properties": {
                             "id": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Fixture ID"
                             },
                             "ids": {
@@ -107,23 +107,23 @@ class ApiSportsMCPServer:
                                 "description": "Date in YYYY-MM-DD format"
                             },
                             "league": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "League ID (requires 'season' parameter)"
                             },
                             "season": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Season year (YYYY) - required when using 'league' or 'team'"
                             },
                             "team": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Team ID (requires 'season' parameter)"
                             },
                             "last": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Last N matches (max 99)"
                             },
                             "next": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Next N matches (max 99)"
                             },
                             "from": {
@@ -143,7 +143,7 @@ class ApiSportsMCPServer:
                                 "description": "Match status (NS, PST, FT, etc.)"
                             },
                             "venue": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Venue ID"
                             },
                             "timezone": {
@@ -160,15 +160,15 @@ class ApiSportsMCPServer:
                         "type": "object",
                         "properties": {
                             "league": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "League ID (required)"
                             },
                             "season": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Season year YYYY (required)"
                             },
                             "team": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Team ID (required)"
                             },
                             "date": {
@@ -186,15 +186,15 @@ class ApiSportsMCPServer:
                         "type": "object",
                         "properties": {
                             "league": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "League ID (required)"
                             },
                             "season": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Season year YYYY (required)"
                             },
                             "team": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Optional team ID to get standings for a specific team"
                             }
                         },
@@ -216,19 +216,19 @@ class ApiSportsMCPServer:
                                 "description": "Date in YYYY-MM-DD format"
                             },
                             "league": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "League ID"
                             },
                             "season": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Season year (YYYY)"
                             },
                             "last": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Last N matches"
                             },
                             "next": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Next N matches"
                             },
                             "from": {
@@ -244,7 +244,7 @@ class ApiSportsMCPServer:
                                 "description": "Match status"
                             },
                             "venue": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Venue ID"
                             },
                             "timezone": {
@@ -262,7 +262,7 @@ class ApiSportsMCPServer:
                         "type": "object",
                         "properties": {
                             "fixture": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Fixture ID (required)"
                             }
                         },
@@ -276,7 +276,7 @@ class ApiSportsMCPServer:
                         "type": "object",
                         "properties": {
                             "fixture": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Fixture ID (required)"
                             }
                         },
@@ -290,7 +290,7 @@ class ApiSportsMCPServer:
                         "type": "object",
                         "properties": {
                             "fixture": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Fixture ID (required)"
                             }
                         },
@@ -304,7 +304,7 @@ class ApiSportsMCPServer:
                         "type": "object",
                         "properties": {
                             "fixture": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Fixture ID (required)"
                             }
                         },
@@ -318,7 +318,7 @@ class ApiSportsMCPServer:
                         "type": "object",
                         "properties": {
                             "id": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "League ID"
                             },
                             "name": {
@@ -334,11 +334,11 @@ class ApiSportsMCPServer:
                                 "description": "Country code (2-6 characters, e.g. FR, GB-ENG, IT)"
                             },
                             "season": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Season year (YYYY)"
                             },
                             "team": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Team ID"
                             },
                             "type": {
@@ -356,7 +356,7 @@ class ApiSportsMCPServer:
                                 "description": "Search string for league name or country (minimum 3 characters)"
                             },
                             "last": {
-                                "type": "integer",
+                                "type": ["string", "integer"],
                                 "description": "Last N leagues/cups added to the API (max 99)"
                             }
                         }

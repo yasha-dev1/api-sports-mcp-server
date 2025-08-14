@@ -49,19 +49,34 @@ def _initialize():
     _register_tools()
 
 
+def _clean_args(**kwargs):
+    """Clean arguments by converting empty strings to None and numeric strings to integers."""
+    cleaned = {}
+    for key, value in kwargs.items():
+        if value == "":
+            # Skip empty strings - treat as None
+            continue
+        elif isinstance(value, str) and value.isdigit():
+            # Convert numeric strings to integers
+            cleaned[key] = int(value)
+        else:
+            cleaned[key] = value
+    return cleaned
+
+
 def _register_tools():
     """Register all MCP tools."""
     
     # Tool: teams_search
     @mcp.tool()
     async def teams_search(
-        id: int | None = None,
+        id: int | str | None = None,
         name: str | None = None,
-        league: int | None = None,
-        season: int | None = None,
+        league: int | str | None = None,
+        season: int | str | None = None,
         country: str | None = None,
         code: str | None = None,
-        venue: int | None = None,
+        venue: int | str | None = None,
         search: str | None = None,
     ) -> dict[str, Any]:
         """Search for football teams and retrieve their information.
@@ -77,28 +92,30 @@ def _register_tools():
             search: Search string (minimum 3 characters)
         """
         logger.info(f"Searching teams with params: {locals()}")
-        return await api_service.search_teams(
+        # Clean arguments to handle empty strings and string integers
+        cleaned_args = _clean_args(
             id=id, name=name, league=league, season=season,
             country=country, code=code, venue=venue, search=search
         )
+        return await api_service.search_teams(**cleaned_args)
 
     # Tool: fixtures_get
     @mcp.tool()
     async def fixtures_get(
-        id: int | None = None,
+        id: int | str | None = None,
         ids: str | None = None,
         live: str | None = None,
         date: str | None = None,
-        league: int | None = None,
-        season: int | None = None,
-        team: int | None = None,
-        last: int | None = None,
-        next: int | None = None,
+        league: int | str | None = None,
+        season: int | str | None = None,
+        team: int | str | None = None,
+        last: int | str | None = None,
+        next: int | str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
         round: str | None = None,
         status: str | None = None,
-        venue: int | None = None,
+        venue: int | str | None = None,
         timezone: str | None = None,
     ) -> dict[str, Any]:
         """Retrieve football fixtures (matches) with comprehensive filtering.
@@ -123,19 +140,21 @@ def _register_tools():
             timezone: Timezone for dates
         """
         logger.info(f"Getting fixtures with params: {locals()}")
-        return await api_service.search_fixtures(
+        # Clean arguments to handle empty strings and string integers
+        cleaned_args = _clean_args(
             id=id, ids=ids, live=live, date=date, league=league,
             season=season, team=team, last=last, next=next,
             from_date=from_date, to_date=to_date, round=round,
             status=status, venue=venue, timezone=timezone
         )
+        return await api_service.search_fixtures(**cleaned_args)
 
     # Tool: team_statistics
     @mcp.tool()
     async def team_statistics(
-        league: int,
-        season: int,
-        team: int,
+        league: int | str,
+        season: int | str,
+        team: int | str,
         date: str | None = None,
     ) -> dict[str, Any]:
         """Get comprehensive statistics for a team in a specific league and season.
@@ -147,16 +166,16 @@ def _register_tools():
             date: Date up to which statistics are calculated (YYYY-MM-DD)
         """
         logger.info(f"Getting team statistics: league={league}, season={season}, team={team}, date={date}")
-        return await api_service.get_team_statistics_formatted(
-            league=league, season=season, team=team, date=date
-        )
+        # Clean arguments to handle empty strings and string integers
+        cleaned_args = _clean_args(league=league, season=season, team=team, date=date)
+        return await api_service.get_team_statistics_formatted(**cleaned_args)
 
     # Tool: standings
     @mcp.tool()
     async def standings(
-        league: int,
-        season: int,
-        team: int | None = None,
+        league: int | str,
+        season: int | str,
+        team: int | str | None = None,
     ) -> dict[str, Any]:
         """Get current league standings/table.
         
@@ -166,23 +185,23 @@ def _register_tools():
             team: Optional team ID to get standings for a specific team
         """
         logger.info(f"Getting standings: league={league}, season={season}, team={team}")
-        return await api_service.get_standings_formatted(
-            league=league, season=season, team=team
-        )
+        # Clean arguments to handle empty strings and string integers
+        cleaned_args = _clean_args(league=league, season=season, team=team)
+        return await api_service.get_standings_formatted(**cleaned_args)
 
     # Tool: head2head
     @mcp.tool()
     async def head2head(
         h2h: str,
         date: str | None = None,
-        league: int | None = None,
-        season: int | None = None,
-        last: int | None = None,
-        next: int | None = None,
+        league: int | str | None = None,
+        season: int | str | None = None,
+        last: int | str | None = None,
+        next: int | str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
         status: str | None = None,
-        venue: int | None = None,
+        venue: int | str | None = None,
         timezone: str | None = None,
     ) -> dict[str, Any]:
         """Get head-to-head comparison between two teams.
@@ -201,69 +220,79 @@ def _register_tools():
             timezone: Timezone for dates
         """
         logger.info(f"Getting head2head: h2h={h2h}, params={locals()}")
-        return await api_service.get_head2head_formatted(
+        # Clean arguments to handle empty strings and string integers
+        cleaned_args = _clean_args(
             h2h=h2h, date=date, league=league, season=season,
             last=last, next=next, from_date=from_date, to_date=to_date,
             status=status, venue=venue, timezone=timezone
         )
+        return await api_service.get_head2head_formatted(**cleaned_args)
 
     # Tool: fixture_statistics
     @mcp.tool()
-    async def fixture_statistics(fixture: int) -> dict[str, Any]:
+    async def fixture_statistics(fixture: int | str) -> dict[str, Any]:
         """Get detailed match statistics for a specific fixture.
         
         Args:
             fixture: Fixture ID (required)
         """
         logger.info(f"Getting fixture statistics: fixture={fixture}")
-        return await api_service.get_fixture_statistics_formatted(fixture=fixture)
+        # Clean arguments to handle empty strings and string integers
+        cleaned_args = _clean_args(fixture=fixture)
+        return await api_service.get_fixture_statistics_formatted(**cleaned_args)
 
     # Tool: fixture_events
     @mcp.tool()
-    async def fixture_events(fixture: int) -> dict[str, Any]:
+    async def fixture_events(fixture: int | str) -> dict[str, Any]:
         """Get timeline of events (goals, cards, substitutions) for a fixture.
         
         Args:
             fixture: Fixture ID (required)
         """
         logger.info(f"Getting fixture events: fixture={fixture}")
-        return await api_service.get_fixture_events_formatted(fixture=fixture)
+        # Clean arguments to handle empty strings and string integers
+        cleaned_args = _clean_args(fixture=fixture)
+        return await api_service.get_fixture_events_formatted(**cleaned_args)
 
     # Tool: fixture_lineups
     @mcp.tool()
-    async def fixture_lineups(fixture: int) -> dict[str, Any]:
+    async def fixture_lineups(fixture: int | str) -> dict[str, Any]:
         """Get team lineups and formations for a fixture.
         
         Args:
             fixture: Fixture ID (required)
         """
         logger.info(f"Getting fixture lineups: fixture={fixture}")
-        return await api_service.get_fixture_lineups_formatted(fixture=fixture)
+        # Clean arguments to handle empty strings and string integers
+        cleaned_args = _clean_args(fixture=fixture)
+        return await api_service.get_fixture_lineups_formatted(**cleaned_args)
 
     # Tool: predictions
     @mcp.tool()
-    async def predictions(fixture: int) -> dict[str, Any]:
+    async def predictions(fixture: int | str) -> dict[str, Any]:
         """Get match predictions and betting advice for a fixture.
         
         Args:
             fixture: Fixture ID (required)
         """
         logger.info(f"Getting predictions: fixture={fixture}")
-        return await api_service.get_predictions_formatted(fixture=fixture)
+        # Clean arguments to handle empty strings and string integers
+        cleaned_args = _clean_args(fixture=fixture)
+        return await api_service.get_predictions_formatted(**cleaned_args)
 
     # Tool: leagues_search
     @mcp.tool()
     async def leagues_search(
-        id: int | None = None,
+        id: int | str | None = None,
         name: str | None = None,
         country: str | None = None,
         code: str | None = None,
-        season: int | None = None,
-        team: int | None = None,
+        season: int | str | None = None,
+        team: int | str | None = None,
         type: str | None = None,
         current: str | None = None,
         search: str | None = None,
-        last: int | None = None,
+        last: int | str | None = None,
     ) -> dict[str, Any]:
         """Get the list of available leagues and cups with comprehensive filtering.
         
@@ -280,10 +309,22 @@ def _register_tools():
             last: Last N leagues/cups added to the API (max 99)
         """
         logger.info(f"Searching leagues with params: {locals()}")
-        return await api_service.search_leagues(
+        # Clean arguments to handle empty strings and string integers
+        cleaned_args = _clean_args(
             id=id, name=name, country=country, code=code, season=season,
             team=team, type=type, current=current, search=search, last=last
         )
+        return await api_service.search_leagues(**cleaned_args)
+
+    # Tool: seasons_get
+    @mcp.tool()
+    async def seasons_get() -> dict[str, Any]:
+        """Get the list of available seasons (4-digit years).
+        
+        Returns all available seasons in the API database.
+        """
+        logger.info("Getting available seasons")
+        return await api_service.get_seasons_formatted()
 
 def run_http(host: str = "0.0.0.0", port: int = 8080) -> None:
     """Run the FastMCP server with HTTP transport.
