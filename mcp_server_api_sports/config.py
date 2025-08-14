@@ -1,26 +1,26 @@
 """Configuration management for API-Sports MCP Server."""
 
-from typing import Optional
+
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, validator
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
-    
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
     )
-    
+
     # API-Sports Configuration
     api_sports_api_key: str = Field(..., description="API-Sports API key")
     api_sports_base_url: str = Field(
         default="https://v3.football.api-sports.io",
         description="API-Sports base URL"
     )
-    
+
     # Logging Configuration
     log_level: str = Field(default="INFO", description="Logging level")
     log_file_path: str = Field(
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
         description="Log format (json or text)",
         pattern="^(json|text)$"
     )
-    
+
     # Cache Configuration
     cache_enabled: bool = Field(default=True, description="Enable caching")
     cache_ttl_teams: int = Field(default=86400, description="Teams cache TTL in seconds")
@@ -59,7 +59,7 @@ class Settings(BaseSettings):
         description="Predictions cache TTL in seconds"
     )
     cache_max_size: int = Field(default=1000, description="Maximum cache size")
-    
+
     # Rate Limiting Configuration
     rate_limit_calls_per_minute: int = Field(
         default=30,
@@ -75,15 +75,16 @@ class Settings(BaseSettings):
         description="Exponential backoff factor"
     )
     rate_limit_max_retries: int = Field(default=3, description="Maximum retry attempts")
-    
+
     # MCP Server Configuration
     mcp_server_name: str = Field(
         default="api-sports-mcp-server",
         description="MCP server name"
     )
     mcp_server_version: str = Field(default="0.1.0", description="MCP server version")
-    
-    @validator("log_level")
+
+    @field_validator("log_level")
+    @classmethod
     def validate_log_level(cls, v: str) -> str:
         """Validate log level."""
         valid_levels = ["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"]
@@ -93,7 +94,7 @@ class Settings(BaseSettings):
 
 
 # Global settings instance
-settings: Optional[Settings] = None
+settings: Settings | None = None
 
 
 def get_settings() -> Settings:

@@ -1,45 +1,45 @@
 """Fixtures MCP tool implementation."""
 
-from typing import Any, Dict, List, Optional
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any
 
-from ..services import ApiSportsService, CacheService
 from ..logger import get_logger
+from ..services import ApiSportsService, CacheService
 
 logger = get_logger(__name__)
 
 
 class FixturesTool:
     """MCP tool for retrieving fixture (match) information."""
-    
+
     def __init__(self, api_service: ApiSportsService, cache_service: CacheService):
         self.api_service = api_service
         self.cache_service = cache_service
-    
+
     def _is_fixture_completed(self, status: str) -> bool:
         """Check if fixture status indicates a completed match."""
         completed_statuses = ["FT", "AET", "PEN", "PST", "CANC", "ABD", "AWD", "WO"]
         return status in completed_statuses
-    
+
     async def get_fixtures(
         self,
-        id: Optional[int] = None,
-        ids: Optional[str] = None,
-        live: Optional[str] = None,
-        date: Optional[str] = None,
-        league: Optional[int] = None,
-        season: Optional[int] = None,
-        team: Optional[int] = None,
-        last: Optional[int] = None,
-        next: Optional[int] = None,
-        from_date: Optional[str] = None,
-        to_date: Optional[str] = None,
-        round: Optional[str] = None,
-        status: Optional[str] = None,
-        venue: Optional[int] = None,
-        timezone: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        id: int | None = None,
+        ids: str | None = None,
+        live: str | None = None,
+        date: str | None = None,
+        league: int | None = None,
+        season: int | None = None,
+        team: int | None = None,
+        last: int | None = None,
+        next: int | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        round: str | None = None,
+        status: str | None = None,
+        venue: int | None = None,
+        timezone: str | None = None,
+    ) -> dict[str, Any]:
         """
         Retrieve fixtures with comprehensive filtering options.
         
@@ -64,20 +64,20 @@ class FixturesTool:
             Dictionary containing fixture information
         """
         request_id = str(uuid.uuid4())
-        
+
         # Validate parameters
         if last and last > 99:
             return {
                 "error": "Last parameter must be 2 digits or less",
                 "request_id": request_id,
             }
-        
+
         if next and next > 99:
             return {
                 "error": "Next parameter must be 2 digits or less",
                 "request_id": request_id,
             }
-        
+
         if date:
             try:
                 datetime.strptime(date, "%Y-%m-%d")
@@ -86,7 +86,7 @@ class FixturesTool:
                     "error": "Date must be in YYYY-MM-DD format",
                     "request_id": request_id,
                 }
-        
+
         if from_date:
             try:
                 datetime.strptime(from_date, "%Y-%m-%d")
@@ -95,7 +95,7 @@ class FixturesTool:
                     "error": "From date must be in YYYY-MM-DD format",
                     "request_id": request_id,
                 }
-        
+
         if to_date:
             try:
                 datetime.strptime(to_date, "%Y-%m-%d")
@@ -104,7 +104,7 @@ class FixturesTool:
                     "error": "To date must be in YYYY-MM-DD format",
                     "request_id": request_id,
                 }
-        
+
         # Build parameters
         params = {}
         if id is not None:
@@ -137,12 +137,12 @@ class FixturesTool:
             params["venue"] = venue
         if timezone:
             params["timezone"] = timezone
-        
+
         logger.info(
             "Retrieving fixtures",
             extra={"params": params, "request_id": request_id}
         )
-        
+
         try:
             # Don't cache live fixtures
             if not live:
@@ -154,7 +154,7 @@ class FixturesTool:
                         extra={"request_id": request_id}
                     )
                     return cached_result
-            
+
             # Make API request
             response = await self.api_service.get_fixtures(
                 id=id,
@@ -173,7 +173,7 @@ class FixturesTool:
                 venue=venue,
                 timezone=timezone,
             )
-            
+
             # Process response
             fixtures_data = []
             for item in response.response:
@@ -182,7 +182,7 @@ class FixturesTool:
                 teams_info = item.get("teams", {})
                 goals_info = item.get("goals", {})
                 score_info = item.get("score", {})
-                
+
                 fixture_data = {
                     "id": fixture_info.get("id"),
                     "referee": fixture_info.get("referee"),
@@ -246,13 +246,13 @@ class FixturesTool:
                     },
                 }
                 fixtures_data.append(fixture_data)
-            
+
             result = {
                 "fixtures": fixtures_data,
                 "count": len(fixtures_data),
                 "request_id": request_id,
             }
-            
+
             # Cache result if not live
             if not live and fixtures_data:
                 # Check if all fixtures are completed to determine cache type
@@ -261,14 +261,14 @@ class FixturesTool:
                     for f in fixtures_data
                 )
                 await self.cache_service.set_fixtures(params, result, is_completed=all_completed)
-            
+
             logger.success(
                 f"Found {len(fixtures_data)} fixtures",
                 extra={"count": len(fixtures_data), "request_id": request_id}
             )
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(
                 f"Error retrieving fixtures: {str(e)}",
@@ -278,8 +278,8 @@ class FixturesTool:
                 "error": f"Failed to retrieve fixtures: {str(e)}",
                 "request_id": request_id,
             }
-    
-    def get_tool_definition(self) -> Dict[str, Any]:
+
+    def get_tool_definition(self) -> dict[str, Any]:
         """Get MCP tool definition for fixtures retrieval."""
         return {
             "name": "fixtures_get",

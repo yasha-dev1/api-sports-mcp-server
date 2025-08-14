@@ -1,218 +1,219 @@
 """Pydantic models for API-Sports responses."""
 
-from typing import Any, Dict, List, Optional, Union
 from datetime import datetime
-from pydantic import BaseModel, Field, HttpUrl
+from typing import Any
+
+from pydantic import BaseModel
 
 
 class Team(BaseModel):
     """Team model."""
-    
+
     id: int
     name: str
-    code: Optional[str] = None
-    country: Optional[str] = None
-    founded: Optional[int] = None
+    code: str | None = None
+    country: str | None = None
+    founded: int | None = None
     national: bool = False
-    logo: Optional[str] = None
+    logo: str | None = None
 
 
 class Venue(BaseModel):
     """Venue model."""
-    
-    id: Optional[int] = None
+
+    id: int | None = None
     name: str
-    address: Optional[str] = None
-    city: Optional[str] = None
-    capacity: Optional[int] = None
-    surface: Optional[str] = None
-    image: Optional[str] = None
+    address: str | None = None
+    city: str | None = None
+    capacity: int | None = None
+    surface: str | None = None
+    image: str | None = None
 
 
 class League(BaseModel):
     """League model."""
-    
+
     id: int
     name: str
     country: str
-    logo: Optional[str] = None
-    flag: Optional[str] = None
-    season: Optional[int] = None
-    round: Optional[str] = None
+    logo: str | None = None
+    flag: str | None = None
+    season: int | None = None
+    round: str | None = None
 
 
 class Season(BaseModel):
     """Season model."""
-    
+
     year: int
     start: str
     end: str
     current: bool
-    coverage: Optional[Dict[str, Any]] = None
+    coverage: dict[str, Any] | None = None
 
 
 class FixtureStatus(BaseModel):
     """Fixture status model."""
-    
+
     long: str
     short: str
-    elapsed: Optional[int] = None
+    elapsed: int | None = None
 
 
 class Score(BaseModel):
     """Score details."""
-    
-    home: Optional[int] = None
-    away: Optional[int] = None
+
+    home: int | None = None
+    away: int | None = None
 
 
 class Goals(BaseModel):
     """Goals statistics."""
-    
-    home: Optional[int] = None
-    away: Optional[int] = None
+
+    home: int | None = None
+    away: int | None = None
 
 
 class Fixture(BaseModel):
     """Fixture (match) model."""
-    
+
     id: int
-    referee: Optional[str] = None
+    referee: str | None = None
     timezone: str
     date: datetime
     timestamp: int
-    periods: Optional[Dict[str, Optional[int]]] = None
-    venue: Optional[Venue] = None
+    periods: dict[str, int | None] | None = None
+    venue: Venue | None = None
     status: FixtureStatus
     league: League
-    teams: Dict[str, Team]
+    teams: dict[str, Team]
     goals: Goals
-    score: Dict[str, Score]
+    score: dict[str, Score]
 
 
 class TeamStatistics(BaseModel):
     """Team statistics model."""
-    
+
     league: League
     team: Team
-    form: Optional[str] = None
-    fixtures: Dict[str, Dict[str, int]]
-    goals: Dict[str, Dict[str, Any]]
-    biggest: Dict[str, Any]
-    clean_sheet: Dict[str, int]
-    failed_to_score: Dict[str, int]
-    penalty: Dict[str, Any]
-    lineups: Optional[List[Dict[str, Any]]] = None
-    cards: Dict[str, Dict[str, Any]]
+    form: str | None = None
+    fixtures: dict[str, dict[str, int]]
+    goals: dict[str, dict[str, Any]]
+    biggest: dict[str, Any]
+    clean_sheet: dict[str, int]
+    failed_to_score: dict[str, int]
+    penalty: dict[str, Any]
+    lineups: list[dict[str, Any]] | None = None
+    cards: dict[str, dict[str, Any]]
 
 
 class Standing(BaseModel):
     """League standing model."""
-    
+
     rank: int
     team: Team
     points: int
     goalsDiff: int
-    group: Optional[str] = None
-    form: Optional[str] = None
-    status: Optional[str] = None
-    description: Optional[str] = None
-    all: Dict[str, int]
-    home: Dict[str, int]
-    away: Dict[str, int]
+    group: str | None = None
+    form: str | None = None
+    status: str | None = None
+    description: str | None = None
+    all: dict[str, int]
+    home: dict[str, int]
+    away: dict[str, int]
     update: datetime
 
 
 class StatisticValue(BaseModel):
     """Statistic value for fixture statistics."""
-    
+
     type: str
-    value: Union[int, float, str, None]
+    value: int | float | str | None
 
 
 class FixtureStatistics(BaseModel):
     """Fixture statistics model."""
-    
+
     team: Team
-    statistics: List[StatisticValue]
+    statistics: list[StatisticValue]
 
 
 class Event(BaseModel):
     """Match event model."""
-    
-    time: Dict[str, Optional[int]]
+
+    time: dict[str, int | None]
     team: Team
-    player: Dict[str, Any]
-    assist: Optional[Dict[str, Any]] = None
+    player: dict[str, Any]
+    assist: dict[str, Any] | None = None
     type: str
     detail: str
-    comments: Optional[str] = None
+    comments: str | None = None
 
 
 class Player(BaseModel):
     """Player model."""
-    
+
     id: int
     name: str
-    number: Optional[int] = None
-    pos: Optional[str] = None
-    grid: Optional[str] = None
+    number: int | None = None
+    pos: str | None = None
+    grid: str | None = None
 
 
 class LineupTeam(BaseModel):
     """Team lineup model."""
-    
+
     team: Team
-    coach: Optional[Dict[str, Any]] = None
-    formation: Optional[str] = None
-    startXI: Optional[List[Dict[str, Player]]] = None
-    substitutes: Optional[List[Dict[str, Player]]] = None
+    coach: dict[str, Any] | None = None
+    formation: str | None = None
+    startXI: list[dict[str, Player]] | None = None
+    substitutes: list[dict[str, Player]] | None = None
 
 
 class Lineup(BaseModel):
     """Match lineup model."""
-    
+
     team: Team
-    coach: Optional[Dict[str, Any]] = None
-    formation: Optional[str] = None
-    startXI: Optional[List[Dict[str, Player]]] = None
-    substitutes: Optional[List[Dict[str, Player]]] = None
+    coach: dict[str, Any] | None = None
+    formation: str | None = None
+    startXI: list[dict[str, Player]] | None = None
+    substitutes: list[dict[str, Player]] | None = None
 
 
 class PredictionData(BaseModel):
     """Prediction data model."""
-    
-    winner: Optional[Dict[str, Any]] = None
-    win_or_draw: Optional[bool] = None
-    under_over: Optional[str] = None
-    goals: Optional[Dict[str, Any]] = None
-    advice: Optional[str] = None
-    percent: Optional[Dict[str, str]] = None
+
+    winner: dict[str, Any] | None = None
+    win_or_draw: bool | None = None
+    under_over: str | None = None
+    goals: dict[str, Any] | None = None
+    advice: str | None = None
+    percent: dict[str, str] | None = None
 
 
 class Prediction(BaseModel):
     """Match prediction model."""
-    
+
     predictions: PredictionData
     league: League
-    teams: Dict[str, Team]
-    comparison: Optional[Dict[str, Any]] = None
-    h2h: Optional[List[Fixture]] = None
+    teams: dict[str, Team]
+    comparison: dict[str, Any] | None = None
+    h2h: list[Fixture] | None = None
 
 
 class Paging(BaseModel):
     """Pagination information."""
-    
+
     current: int
     total: int
 
 
 class ApiResponse(BaseModel):
     """Standard API response wrapper."""
-    
+
     get: str
-    parameters: Dict[str, Any]
-    errors: Union[List[str], Dict[str, Any]]
+    parameters: dict[str, Any]
+    errors: list[str] | dict[str, Any]
     results: int
-    paging: Optional[Paging] = None
-    response: List[Any]
+    paging: Paging | None = None
+    response: list[Any]

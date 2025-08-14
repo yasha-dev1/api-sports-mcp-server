@@ -1,12 +1,12 @@
 """Pytest configuration and fixtures."""
 
-import pytest
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any
+from typing import Any
+from unittest.mock import MagicMock, patch
 
-from mcp_server_api_sports.services import ApiSportsService, CacheService
+import pytest
+
 from mcp_server_api_sports.models import ApiResponse
+from mcp_server_api_sports.services import ApiSportsService, CacheService
 
 
 @pytest.fixture
@@ -15,7 +15,7 @@ def mock_settings():
     with patch("mcp_server_api_sports.config.get_settings") as mock:
         settings = MagicMock()
         settings.api_sports_api_key = "test_api_key"
-        settings.api_sports_base_url = "https://test.api-sports.io"
+        settings.api_sports_base_url = "https://v3.football.api-sports.io"
         settings.cache_enabled = True
         settings.cache_max_size = 100
         settings.cache_ttl_teams = 3600
@@ -201,7 +201,7 @@ def mock_statistics_response():
         "errors": [],
         "results": 1,
         "paging": {"current": 1, "total": 1},
-        "response": {
+        "response": [{
             "league": {
                 "id": 39,
                 "name": "Premier League",
@@ -296,5 +296,5 @@ def mock_statistics_response():
                     "106-120": {"total": None, "percentage": None}
                 }
             }
-        }
+        }]
     }

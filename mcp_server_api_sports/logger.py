@@ -1,14 +1,16 @@
 """Loguru-based logging configuration for API-Sports MCP Server."""
 
-import sys
 import json
+import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
+
 from loguru import logger
+
 from .config import get_settings
 
 
-def serialize_record(record: Dict[str, Any]) -> str:
+def serialize_record(record: dict[str, Any]) -> str:
     """Serialize log record to JSON format."""
     subset = {
         "timestamp": record["time"].isoformat(),
@@ -18,11 +20,11 @@ def serialize_record(record: Dict[str, Any]) -> str:
         "function": record["function"],
         "line": record["line"],
     }
-    
+
     # Add extra fields if present
     if record.get("extra"):
         subset["extra"] = record["extra"]
-    
+
     # Add exception info if present
     if record.get("exception"):
         subset["exception"] = {
@@ -30,17 +32,17 @@ def serialize_record(record: Dict[str, Any]) -> str:
             "value": str(record["exception"].value) if record["exception"].value else None,
             "traceback": record["exception"].traceback if record["exception"].traceback else None,
         }
-    
+
     return json.dumps(subset, default=str)
 
 
 def setup_logging() -> None:
     """Configure loguru logging based on settings."""
     settings = get_settings()
-    
+
     # Remove default handler
     logger.remove()
-    
+
     # Console handler - always enabled
     console_format = (
         "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
@@ -48,7 +50,7 @@ def setup_logging() -> None:
         "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
         "<level>{message}</level>"
     )
-    
+
     if settings.log_format == "json":
         logger.add(
             sys.stdout,
@@ -63,11 +65,11 @@ def setup_logging() -> None:
             level=settings.log_level,
             colorize=True,
         )
-    
+
     # File handler
     log_path = Path(settings.log_file_path)
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     if settings.log_format == "json":
         logger.add(
             log_path,
@@ -93,7 +95,7 @@ def setup_logging() -> None:
             compression="gz",
             level=settings.log_level,
         )
-    
+
     # Add error file handler for ERROR and above
     error_log_path = log_path.parent / f"{log_path.stem}_errors{log_path.suffix}"
     logger.add(
@@ -117,23 +119,23 @@ def get_logger(name: str = None) -> "logger":
 # Performance logging decorator
 def log_performance(func):
     """Decorator to log function performance."""
-    import time
     import functools
-    
+    import time
+
     @functools.wraps(func)
     async def async_wrapper(*args, **kwargs):
         start_time = time.perf_counter()
         request_id = kwargs.get("request_id", "unknown")
-        
+
         logger.debug(
             f"Starting {func.__name__}",
             extra={"function": func.__name__, "request_id": request_id}
         )
-        
+
         try:
             result = await func(*args, **kwargs)
             elapsed_time = time.perf_counter() - start_time
-            
+
             logger.success(
                 f"Completed {func.__name__} in {elapsed_time:.3f}s",
                 extra={
@@ -143,7 +145,7 @@ def log_performance(func):
                 }
             )
             return result
-            
+
         except Exception as e:
             elapsed_time = time.perf_counter() - start_time
             logger.error(
@@ -156,21 +158,21 @@ def log_performance(func):
                 }
             )
             raise
-    
+
     @functools.wraps(func)
     def sync_wrapper(*args, **kwargs):
         start_time = time.perf_counter()
         request_id = kwargs.get("request_id", "unknown")
-        
+
         logger.debug(
             f"Starting {func.__name__}",
             extra={"function": func.__name__, "request_id": request_id}
         )
-        
+
         try:
             result = func(*args, **kwargs)
             elapsed_time = time.perf_counter() - start_time
-            
+
             logger.success(
                 f"Completed {func.__name__} in {elapsed_time:.3f}s",
                 extra={
@@ -180,7 +182,7 @@ def log_performance(func):
                 }
             )
             return result
-            
+
         except Exception as e:
             elapsed_time = time.perf_counter() - start_time
             logger.error(
@@ -193,7 +195,7 @@ def log_performance(func):
                 }
             )
             raise
-    
+
     # Return appropriate wrapper based on function type
     import asyncio
     if asyncio.iscoroutinefunction(func):

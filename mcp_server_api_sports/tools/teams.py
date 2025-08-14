@@ -1,33 +1,32 @@
 """Teams MCP tool implementation."""
 
-from typing import Any, Dict, List, Optional
 import uuid
+from typing import Any
 
-from ..services import ApiSportsService, CacheService
 from ..logger import get_logger
-from ..models import Team, Venue
+from ..services import ApiSportsService, CacheService
 
 logger = get_logger(__name__)
 
 
 class TeamsTool:
     """MCP tool for searching and retrieving team information."""
-    
+
     def __init__(self, api_service: ApiSportsService, cache_service: CacheService):
         self.api_service = api_service
         self.cache_service = cache_service
-    
+
     async def search_teams(
         self,
-        id: Optional[int] = None,
-        name: Optional[str] = None,
-        league: Optional[int] = None,
-        season: Optional[int] = None,
-        country: Optional[str] = None,
-        code: Optional[str] = None,
-        venue: Optional[int] = None,
-        search: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        id: int | None = None,
+        name: str | None = None,
+        league: int | None = None,
+        season: int | None = None,
+        country: str | None = None,
+        code: str | None = None,
+        venue: int | None = None,
+        search: str | None = None,
+    ) -> dict[str, Any]:
         """
         Search for teams with various filters.
         
@@ -45,14 +44,14 @@ class TeamsTool:
             Dictionary containing team information
         """
         request_id = str(uuid.uuid4())
-        
+
         # Validate search parameter
         if search and len(search) < 3:
             return {
                 "error": "Search parameter must be at least 3 characters long",
                 "request_id": request_id,
             }
-        
+
         # Build parameters
         params = {}
         if id is not None:
@@ -71,12 +70,12 @@ class TeamsTool:
             params["venue"] = venue
         if search:
             params["search"] = search
-        
+
         logger.info(
             "Searching teams",
             extra={"params": params, "request_id": request_id}
         )
-        
+
         try:
             # Check cache first
             cached_result = await self.cache_service.get_teams(params)
@@ -86,7 +85,7 @@ class TeamsTool:
                     extra={"request_id": request_id}
                 )
                 return cached_result
-            
+
             # Make API request
             response = await self.api_service.get_teams(
                 id=id,
@@ -98,13 +97,13 @@ class TeamsTool:
                 venue=venue,
                 search=search,
             )
-            
+
             # Process response
             teams_data = []
             for item in response.response:
                 team_info = item.get("team", {})
                 venue_info = item.get("venue", {})
-                
+
                 team_data = {
                     "id": team_info.get("id"),
                     "name": team_info.get("name"),
@@ -124,23 +123,23 @@ class TeamsTool:
                     } if venue_info else None,
                 }
                 teams_data.append(team_data)
-            
+
             result = {
                 "teams": teams_data,
                 "count": len(teams_data),
                 "request_id": request_id,
             }
-            
+
             # Cache result
             await self.cache_service.set_teams(params, result)
-            
+
             logger.success(
                 f"Found {len(teams_data)} teams",
                 extra={"count": len(teams_data), "request_id": request_id}
             )
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(
                 f"Error searching teams: {str(e)}",
@@ -150,8 +149,8 @@ class TeamsTool:
                 "error": f"Failed to search teams: {str(e)}",
                 "request_id": request_id,
             }
-    
-    def get_tool_definition(self) -> Dict[str, Any]:
+
+    def get_tool_definition(self) -> dict[str, Any]:
         """Get MCP tool definition for teams search."""
         return {
             "name": "teams_search",

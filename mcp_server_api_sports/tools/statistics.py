@@ -1,29 +1,29 @@
 """Team Statistics MCP tool implementation."""
 
-from typing import Any, Dict, Optional
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any
 
-from ..services import ApiSportsService, CacheService
 from ..logger import get_logger
+from ..services import ApiSportsService, CacheService
 
 logger = get_logger(__name__)
 
 
 class TeamStatisticsTool:
     """MCP tool for retrieving team statistics."""
-    
+
     def __init__(self, api_service: ApiSportsService, cache_service: CacheService):
         self.api_service = api_service
         self.cache_service = cache_service
-    
+
     async def get_team_statistics(
         self,
         league: int,
         season: int,
         team: int,
-        date: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        date: str | None = None,
+    ) -> dict[str, Any]:
         """
         Get team statistics for a specific league and season.
         
@@ -37,7 +37,7 @@ class TeamStatisticsTool:
             Dictionary containing team statistics
         """
         request_id = str(uuid.uuid4())
-        
+
         # Validate date format if provided
         if date:
             try:
@@ -47,7 +47,7 @@ class TeamStatisticsTool:
                     "error": "Date must be in YYYY-MM-DD format",
                     "request_id": request_id,
                 }
-        
+
         # Build parameters
         params = {
             "league": league,
@@ -56,12 +56,12 @@ class TeamStatisticsTool:
         }
         if date:
             params["date"] = date
-        
+
         logger.info(
             "Retrieving team statistics",
             extra={"params": params, "request_id": request_id}
         )
-        
+
         try:
             # Check cache first
             cached_result = await self.cache_service.get_statistics(params)
@@ -71,7 +71,7 @@ class TeamStatisticsTool:
                     extra={"request_id": request_id}
                 )
                 return cached_result
-            
+
             # Make API request
             response = await self.api_service.get_team_statistics(
                 league=league,
@@ -79,16 +79,16 @@ class TeamStatisticsTool:
                 team=team,
                 date=date,
             )
-            
+
             # Process response
             if not response.response:
                 return {
                     "error": "No statistics found for the specified parameters",
                     "request_id": request_id,
                 }
-            
+
             stats_data = response.response[0]
-            
+
             # Extract and format statistics
             formatted_stats = {
                 "league": {
@@ -225,22 +225,22 @@ class TeamStatisticsTool:
                     },
                 },
             }
-            
+
             result = {
                 "statistics": formatted_stats,
                 "request_id": request_id,
             }
-            
+
             # Cache result
             await self.cache_service.set_statistics(params, result)
-            
+
             logger.success(
                 "Retrieved team statistics successfully",
                 extra={"request_id": request_id}
             )
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(
                 f"Error retrieving team statistics: {str(e)}",
@@ -250,8 +250,8 @@ class TeamStatisticsTool:
                 "error": f"Failed to retrieve team statistics: {str(e)}",
                 "request_id": request_id,
             }
-    
-    def get_tool_definition(self) -> Dict[str, Any]:
+
+    def get_tool_definition(self) -> dict[str, Any]:
         """Get MCP tool definition for team statistics."""
         return {
             "name": "team_statistics",
