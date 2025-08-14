@@ -11,7 +11,6 @@ from mcp.types import TextContent, Tool
 from .config import get_settings
 from .logger import get_logger, setup_logging
 from .services import ApiSportsService, CacheService
-from .tools import FixturesTool, TeamStatisticsTool, TeamsTool
 
 logger = get_logger(__name__)
 
@@ -24,13 +23,8 @@ class ApiSportsMCPServer:
         self.server = Server(self.settings.mcp_server_name)
 
         # Initialize services
-        self.api_service = ApiSportsService()
         self.cache_service = CacheService()
-
-        # Initialize tools
-        self.teams_tool = TeamsTool(self.api_service, self.cache_service)
-        self.fixtures_tool = FixturesTool(self.api_service, self.cache_service)
-        self.statistics_tool = TeamStatisticsTool(self.api_service, self.cache_service)
+        self.api_service = ApiSportsService(cache_service=self.cache_service)
 
         # Register handlers
         self._register_handlers()
@@ -49,17 +43,138 @@ class ApiSportsMCPServer:
                 Tool(
                     name="teams_search",
                     description="Search for football teams and retrieve their information",
-                    inputSchema=self.teams_tool.get_tool_definition()["inputSchema"],
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "description": "Team ID"
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "Team name"
+                            },
+                            "league": {
+                                "type": "integer",
+                                "description": "League ID"
+                            },
+                            "season": {
+                                "type": "integer",
+                                "description": "Season year (YYYY)"
+                            },
+                            "country": {
+                                "type": "string",
+                                "description": "Country name"
+                            },
+                            "code": {
+                                "type": "string",
+                                "description": "3-letter team code"
+                            },
+                            "venue": {
+                                "type": "integer",
+                                "description": "Venue ID"
+                            },
+                            "search": {
+                                "type": "string",
+                                "description": "Search string (minimum 3 characters)"
+                            }
+                        }
+                    },
                 ),
                 Tool(
                     name="fixtures_get",
                     description="Retrieve football fixtures (matches) with comprehensive filtering",
-                    inputSchema=self.fixtures_tool.get_tool_definition()["inputSchema"],
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "description": "Fixture ID"
+                            },
+                            "ids": {
+                                "type": "string",
+                                "description": "Multiple fixture IDs (delimiter '-', max 20)"
+                            },
+                            "live": {
+                                "type": "string",
+                                "description": "'all' or league IDs for live fixtures"
+                            },
+                            "date": {
+                                "type": "string",
+                                "description": "Date in YYYY-MM-DD format"
+                            },
+                            "league": {
+                                "type": "integer",
+                                "description": "League ID"
+                            },
+                            "season": {
+                                "type": "integer",
+                                "description": "Season year (YYYY)"
+                            },
+                            "team": {
+                                "type": "integer",
+                                "description": "Team ID"
+                            },
+                            "last": {
+                                "type": "integer",
+                                "description": "Last N matches (max 99)"
+                            },
+                            "next": {
+                                "type": "integer",
+                                "description": "Next N matches (max 99)"
+                            },
+                            "from": {
+                                "type": "string",
+                                "description": "Start date (YYYY-MM-DD)"
+                            },
+                            "to": {
+                                "type": "string",
+                                "description": "End date (YYYY-MM-DD)"
+                            },
+                            "round": {
+                                "type": "string",
+                                "description": "Round name"
+                            },
+                            "status": {
+                                "type": "string",
+                                "description": "Match status (NS, PST, FT, etc.)"
+                            },
+                            "venue": {
+                                "type": "integer",
+                                "description": "Venue ID"
+                            },
+                            "timezone": {
+                                "type": "string",
+                                "description": "Timezone for dates"
+                            }
+                        }
+                    },
                 ),
                 Tool(
                     name="team_statistics",
                     description="Get comprehensive statistics for a team in a specific league and season",
-                    inputSchema=self.statistics_tool.get_tool_definition()["inputSchema"],
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "league": {
+                                "type": "integer",
+                                "description": "League ID (required)"
+                            },
+                            "season": {
+                                "type": "integer",
+                                "description": "Season year YYYY (required)"
+                            },
+                            "team": {
+                                "type": "integer",
+                                "description": "Team ID (required)"
+                            },
+                            "date": {
+                                "type": "string",
+                                "description": "Date up to which statistics are calculated (YYYY-MM-DD)"
+                            }
+                        },
+                        "required": ["league", "season", "team"]
+                    },
                 ),
             ]
 
@@ -78,7 +193,7 @@ class ApiSportsMCPServer:
                 result = None
 
                 if name == "teams_search":
-                    result = await self.teams_tool.search_teams(**arguments)
+                    result = await self.api_service.search_teams(**arguments)
 
                 elif name == "fixtures_get":
                     # Map 'from' and 'to' parameters to 'from_date' and 'to_date'
@@ -86,10 +201,10 @@ class ApiSportsMCPServer:
                         arguments["from_date"] = arguments.pop("from")
                     if "to" in arguments:
                         arguments["to_date"] = arguments.pop("to")
-                    result = await self.fixtures_tool.get_fixtures(**arguments)
+                    result = await self.api_service.search_fixtures(**arguments)
 
                 elif name == "team_statistics":
-                    result = await self.statistics_tool.get_team_statistics(**arguments)
+                    result = await self.api_service.get_team_statistics_formatted(**arguments)
 
                 else:
                     error_msg = f"Unknown tool: {name}"
