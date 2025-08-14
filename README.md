@@ -41,8 +41,15 @@ pip install -e ".[dev]"
 
 ## Running the Server
 
+### Transport Options
+
+The server supports two transport mechanisms:
+- **STDIO** (default): For local development and Claude Desktop
+- **HTTP/Streamable**: For cloud deployment and easier debugging
+
 ### Command Line
 
+#### STDIO Transport (Default)
 ```bash
 # Run as a module
 python -m mcp_server_api_sports
@@ -52,6 +59,71 @@ mcp-server-api-sports
 
 # Or use the standalone script for development
 python run_server.py
+```
+
+#### HTTP Transport
+```bash
+# Using FastMCP (recommended)
+mcp-server-api-sports-fastmcp
+
+# Using low-level API
+mcp-server-api-sports-http
+
+# Or directly with Python
+python -m mcp_server_api_sports.server_fastmcp --http
+```
+
+### Docker Deployment
+
+#### Quick Start with Docker Compose
+
+1. **Create `.env` file** with your API key:
+```env
+API_SPORTS_API_KEY=your_api_key_here
+```
+
+2. **Run with Docker Compose**:
+```bash
+# Development mode (with live code reload)
+docker-compose -f docker-compose.dev.yml up
+
+# Production mode
+docker-compose up -d
+
+# View logs
+docker-compose logs -f api-sports-mcp
+```
+
+3. **Access the server**:
+- HTTP endpoint: `http://localhost:8080/mcp`
+- Health check: `http://localhost:8080/health`
+
+#### Build and Run with Docker
+
+```bash
+# Build the image
+docker build -t api-sports-mcp-server .
+
+# Run the container
+docker run -d \
+  -p 8080:8080 \
+  -e API_SPORTS_API_KEY=your_api_key \
+  --name api-sports-mcp \
+  api-sports-mcp-server
+```
+
+#### Production Deployment
+
+For production, use the production compose file:
+```bash
+# Build and start services
+docker-compose -f docker-compose.prod.yml up -d
+
+# This includes:
+# - Nginx reverse proxy
+# - Resource limits
+# - Volume persistence
+# - Health checks
 ```
 
 ### IntelliJ IDEA / PyCharm
@@ -70,10 +142,11 @@ For IntelliJ IDEA or PyCharm, you have several options:
    - Set working directory to project root
    - Add environment variable: `API_SPORTS_API_KEY=your_key`
 
-3. **Script Path Configuration**:
+3. **HTTP Server Configuration**:
    - Go to Run → Edit Configurations
    - Add a new Python configuration
-   - Set "Script path" to: `run_server.py`
+   - Set "Module name" to: `mcp_server_api_sports.server_fastmcp`
+   - Set "Parameters" to: `--http`
    - Set working directory to project root
    - Add environment variable: `API_SPORTS_API_KEY=your_key`
 

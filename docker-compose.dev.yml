@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  api-sports-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder  # Use builder stage for development
+    container_name: api-sports-mcp-server-dev
+    environment:
+      - API_SPORTS_API_KEY=${API_SPORTS_API_KEY}
+      - LOG_LEVEL=DEBUG
+      - LOG_FORMAT=text
+      - HTTP_HOST=0.0.0.0
+      - HTTP_PORT=8080
+      - CACHE_ENABLED=true
+      - PYTHONDEBUG=1
+    ports:
+      - "8080:8080"
+      - "5678:5678"  # Debugger port
+    volumes:
+      - ./mcp_server_api_sports:/app/mcp_server_api_sports  # Mount source code
+      - ./logs:/app/logs
+      - ./tests:/app/tests  # Mount tests for development
+    restart: unless-stopped
+    command: ["python", "-m", "mcp_server_api_sports.server_fastmcp", "--http"]
+    networks:
+      - mcp-network
+
+networks:
+  mcp-network:
+    driver: bridge

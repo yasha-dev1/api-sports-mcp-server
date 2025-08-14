@@ -82,6 +82,12 @@ class Settings(BaseSettings):
         description="MCP server name"
     )
     mcp_server_version: str = Field(default="0.1.0", description="MCP server version")
+    
+    # HTTP Server Configuration
+    http_host: str = Field(default="0.0.0.0", description="HTTP server host")
+    http_port: int = Field(default=8080, description="HTTP server port")
+    http_cors_enabled: bool = Field(default=True, description="Enable CORS for HTTP server")
+    http_max_connections: int = Field(default=100, description="Maximum HTTP connections")
 
     @field_validator("log_level")
     @classmethod

@@ -18,6 +18,8 @@ dependencies = [
     "loguru>=0.7.2",
     "python-dotenv>=1.0.0",
     "typing-extensions>=4.0.0",
+    "uvicorn>=0.23.0",
+    "starlette>=0.27.0",
 ]
 
 [project.optional-dependencies]
@@ -34,6 +36,8 @@ dev = [
 
 [project.scripts]
 mcp-server-api-sports = "mcp_server_api_sports.server:run"
+mcp-server-api-sports-http = "mcp_server_api_sports.server_http:main"
+mcp-server-api-sports-fastmcp = "mcp_server_api_sports.server_fastmcp:run_http"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
