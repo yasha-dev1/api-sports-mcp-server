@@ -350,7 +350,7 @@ def run_stdio() -> None:
     if not mcp:
         _initialize()
     
-    logger.info(f"Starting FastMCP stdio server")
+    logger.info("Starting FastMCP stdio server")
     logger.info(f"Server: {settings.mcp_server_name} v{settings.mcp_server_version}")
     
     # Run with stdio transport

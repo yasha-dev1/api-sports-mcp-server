@@ -189,7 +189,7 @@ class ApiSportsService:
                             error_text += f": {error_details['message']}"
                         else:
                             error_text += f": {response.text}"
-                    except:
+                    except Exception:
                         error_text += f": {response.text}"
                     
                     logger.error(
@@ -738,11 +738,11 @@ class ApiSportsService:
             params["team"] = str(team)
             # If only team is provided without other filters, get next 10 fixtures
             # This ensures we get meaningful results
-            if (season is None and not date and not from_date and 
+            if (season is None and not date and not from_date and
                 not last and not next and not id and not ids and not live):
                 params["next"] = "10"
                 logger.info(
-                    f"Auto-adding next=10 for team-only query to get upcoming fixtures",
+                    "Auto-adding next=10 for team-only query to get upcoming fixtures",
                     extra={"team": team, "request_id": request_id}
                 )
         if last is not None:

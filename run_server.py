@@ -8,7 +8,7 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from mcp_server_api_sports.server import run
+from mcp_server_api_sports.server import run  # noqa: E402
 
 if __name__ == "__main__":
     run()

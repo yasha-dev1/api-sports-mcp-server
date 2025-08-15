@@ -516,8 +516,8 @@ class ApiSportsMCPServer:
             async with stdio_server() as (read_stream, write_stream):
                 logger.info("MCP server started successfully")
                 await self.server.run(
-                    read_stream, 
-                    write_stream, 
+                    read_stream,
+                    write_stream,
                     self.server.create_initialization_options()
                 )
 
