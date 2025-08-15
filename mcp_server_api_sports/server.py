@@ -377,7 +377,7 @@ class ApiSportsMCPServer:
 
             try:
                 # Clean up arguments - remove empty strings and convert to proper types
-                cleaned_args = {}
+                cleaned_args: dict[str, Any] = {}
                 for key, value in arguments.items():
                     if value == "":
                         # Skip empty strings - they should be treated as None/not provided

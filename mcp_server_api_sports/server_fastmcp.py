@@ -10,13 +10,13 @@ from .logger import get_logger, setup_logging
 from .services import ApiSportsService, CacheService
 
 # Lazy initialization - will be set up when the module is run
-logger = None
-settings = None
-cache_service = None
-api_service = None
-mcp = None
+logger: Any | None = None
+settings: Any | None = None
+cache_service: CacheService | None = None
+api_service: ApiSportsService | None = None
+mcp: FastMCP | None = None
 
-def _initialize():
+def _initialize() -> None:
     """Initialize the module-level variables."""
     global logger, settings, cache_service, api_service, mcp
     
@@ -37,7 +37,7 @@ def _initialize():
     # Add health check endpoint for Docker
     from starlette.responses import JSONResponse
     @mcp.custom_route("/health", methods=["GET"])
-    async def health_check():
+    async def health_check() -> JSONResponse:
         """Health check endpoint for monitoring."""
         return JSONResponse({
             "status": "healthy",
@@ -49,9 +49,9 @@ def _initialize():
     _register_tools()
 
 
-def _clean_args(**kwargs):
+def _clean_args(**kwargs: Any) -> dict[str, Any]:
     """Clean arguments by converting empty strings to None and numeric strings to integers."""
-    cleaned = {}
+    cleaned: dict[str, Any] = {}
     for key, value in kwargs.items():
         if value == "":
             # Skip empty strings - treat as None
@@ -64,8 +64,12 @@ def _clean_args(**kwargs):
     return cleaned
 
 
-def _register_tools():
+def _register_tools() -> None:
     """Register all MCP tools."""
+    # At this point, all globals should be initialized
+    assert mcp is not None
+    assert logger is not None
+    assert api_service is not None
     
     # Tool: teams_search
     @mcp.tool()
@@ -336,6 +340,10 @@ def run_http(host: str = "0.0.0.0", port: int = 8080) -> None:
     if not mcp:
         _initialize()
     
+    assert mcp is not None
+    assert logger is not None
+    assert settings is not None
+    
     logger.info(f"Starting FastMCP HTTP server on {host}:{port}")
     logger.info(f"Server: {settings.mcp_server_name} v{settings.mcp_server_version}")
     logger.info("Note: FastMCP currently runs on port 8000 internally")
@@ -349,6 +357,10 @@ def run_stdio() -> None:
     """Run the FastMCP server with stdio transport."""
     if not mcp:
         _initialize()
+    
+    assert mcp is not None
+    assert logger is not None
+    assert settings is not None
     
     logger.info("Starting FastMCP stdio server")
     logger.info(f"Server: {settings.mcp_server_name} v{settings.mcp_server_version}")

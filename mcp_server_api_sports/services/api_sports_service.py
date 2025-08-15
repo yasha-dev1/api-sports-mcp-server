@@ -1718,3 +1718,47 @@ class ApiSportsService:
                 "error": f"Failed to retrieve leagues: {str(e)}",
                 "request_id": request_id,
             }
+
+    async def get_seasons_formatted(self) -> dict[str, Any]:
+        """Get available seasons with formatted output."""
+        request_id = str(uuid.uuid4())
+        
+        logger.info(
+            "Getting available seasons",
+            extra={"request_id": request_id}
+        )
+
+        try:
+            # Make API request
+            response = await self.get_seasons()
+
+            # Process response
+            result = {
+                "success": True,
+                "seasons": response.response,
+                "total_results": response.results,
+                "request_id": request_id,
+                "api_credits": {
+                    "get": response.get,
+                    "parameters": response.parameters,
+                    "errors": response.errors,
+                    "results": response.results,
+                },
+            }
+
+            logger.success(
+                "Retrieved seasons successfully",
+                extra={"total_results": response.results, "request_id": request_id}
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(
+                f"Error retrieving seasons: {str(e)}",
+                extra={"error": str(e), "request_id": request_id}
+            )
+            return {
+                "error": f"Failed to retrieve seasons: {str(e)}",
+                "request_id": request_id,
+            }

@@ -120,14 +120,14 @@ def get_settings() -> Settings:
         
         # Try loading from multiple locations
         env_paths = [
-            ".env",
+            Path(".env"),
             Path(__file__).parent.parent / ".env",
-            os.path.expanduser("~/.config/api-sports-mcp/.env"),
+            Path(os.path.expanduser("~/.config/api-sports-mcp/.env")),
         ]
         
-        for env_path in env_paths:
-            if Path(env_path).exists():
-                load_dotenv(env_path, override=False)
+        for env_path_obj in env_paths:
+            if env_path_obj.exists():
+                load_dotenv(str(env_path_obj), override=False)
                 break
         
         settings = Settings()
