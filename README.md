@@ -18,6 +18,9 @@ A Model Context Protocol (MCP) server that provides seamless integration with [A
 - **Type Safety**: Full type hints with Pydantic models
 - **Async Support**: Built on async/await for optimal performance
 
+## Demo
+![Claude Sport Api Demo](docs/Claude-Sport-Api-Demo.gif)
+
 ## Installation
 
 ### Prerequisites

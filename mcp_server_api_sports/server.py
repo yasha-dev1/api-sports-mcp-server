@@ -533,6 +533,10 @@ class ApiSportsMCPServer:
 
 async def main() -> None:
     """Main entry point."""
+    # Set MCP server mode to prevent stdout logging interference
+    import os
+    os.environ['MCP_SERVER_MODE'] = 'true'
+    
     # Setup logging first
     setup_logging()
 
