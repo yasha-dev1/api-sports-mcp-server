@@ -46,32 +46,57 @@ def setup_logging() -> None:
     # Remove default handler
     logger.remove()
 
-    # Console handler - always enabled
-    console_format = (
-        "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
-        "<level>{level: <8}</level> | "
-        "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
-        "<level>{message}</level>"
-    )
-
-    if settings.log_format == "json":
-        logger.add(
-            sys.stdout,
-            format="{message}",
-            serialize=True,
-            level=settings.log_level,
+    # Console handler - only enable if not running as MCP server
+    # MCP servers use stdout for JSON-RPC protocol, so we can't log to stdout
+    import os
+    is_mcp_server = os.environ.get('MCP_SERVER_MODE', 'false').lower() == 'true'
+    
+    if not is_mcp_server:
+        console_format = (
+            "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+            "<level>{level: <8}</level> | "
+            "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
+            "<level>{message}</level>"
         )
+
+        if settings.log_format == "json":
+            logger.add(
+                sys.stdout,
+                format="{message}",
+                serialize=True,
+                level=settings.log_level,
+            )
+        else:
+            logger.add(
+                sys.stdout,
+                format=console_format,
+                level=settings.log_level,
+                colorize=True,
+            )
     else:
+        # For MCP servers, log to stderr instead
+        console_format = (
+            "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
+            "{level: <8} | "
+            "{name}:{function}:{line} | "
+            "{message}"
+        )
         logger.add(
-            sys.stdout,
+            sys.stderr,
             format=console_format,
             level=settings.log_level,
-            colorize=True,
+            colorize=False,
         )
 
-    # File handler
+    # File handler - handle directory creation gracefully
     log_path = Path(settings.log_file_path)
-    log_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+    except (OSError, PermissionError):
+        # If we can't create the log directory, fall back to temp directory
+        import tempfile
+        log_path = Path(tempfile.gettempdir()) / "api_sports_mcp.log"
+        logger.warning(f"Could not create log directory, using temp path: {log_path}")
 
     if settings.log_format == "json":
         logger.add(
